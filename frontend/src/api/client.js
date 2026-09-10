@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://wwuyitqy2lafj2xuywspyeut.147.5.103.87.sslip.io/api'
 
 export async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem('intimos_token')
