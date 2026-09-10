@@ -5,14 +5,18 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('intimos_user')
-    return saved ? JSON.parse(saved) : null
+    try {
+      const saved = localStorage.getItem('intimos_user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
   })
   const [token, setToken] = useState(() => localStorage.getItem('intimos_token'))
   const [totalPoints, setTotalPoints] = useState(0)
   const [monthPoints, setMonthPoints] = useState(0)
   const [level, setLevel] = useState('Semilla')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   const refreshProfile = async () => {
     if (!localStorage.getItem('intimos_token')) {

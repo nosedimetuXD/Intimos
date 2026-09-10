@@ -52,7 +52,7 @@ function PrivateRoute({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-base flex items-center justify-center text-muted text-xs">
+      <div className="min-h-screen bg-bg flex items-center justify-center text-muted text-xs">
         Cargando Íntimos...
       </div>
     )

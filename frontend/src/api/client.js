@@ -24,11 +24,16 @@ export async function apiRequest(endpoint, options = {}) {
 
   const url = `${API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
   
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+
   try {
     const res = await fetch(url, {
       ...options,
       headers,
+      signal: options.signal || controller.signal,
     })
+    clearTimeout(timeoutId)
 
     const data = await res.json().catch(() => ({}))
 
