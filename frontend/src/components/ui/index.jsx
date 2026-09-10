@@ -98,8 +98,8 @@ export function Avatar({ src, name, size = 'md', className = '' }) {
     xl: 'w-20 h-20 text-2xl'
   }
   
-  const initials = name 
-    ? name.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() 
+  const initials = typeof name === 'string' && name.trim()
+    ? name.trim().split(/\s+/).map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() 
     : '?'
 
   if (src) {

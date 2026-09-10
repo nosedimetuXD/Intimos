@@ -367,7 +367,7 @@ export default function HomeScreen() {
             <span className="font-bold text-accent-light">puesto {myRank}</span>
             <span className="text-text-secondary"> — te faltan </span>
             <span className="font-bold text-amber-400">{ptsToNext} pts</span>
-            <span className="text-text-secondary"> para alcanzar a {aboveUser.full_name.split(' ')[0]}</span>
+            <span className="text-text-secondary"> para alcanzar a {aboveUser?.full_name ? aboveUser.full_name.split(' ')[0] : 'compañero'}</span>
           </div>
         )}
 
