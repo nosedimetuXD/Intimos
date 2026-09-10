@@ -2,25 +2,179 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-slate-950 text-slate-100;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  }
+/* ── Theme variables ─────────────────────────────────────────── */
+:root {
+  --color-bg: #0F0F0F;
+  --color-card: #1A1A1A;
+  --color-card2: #1E1E1E;
+  --color-border: #2A2A2A;
+  --color-muted: #6B7280;
+  --color-text-primary: #F9FAFB;
+  --color-text-secondary: #D1D5DB;
+
+  --input-bg: #1E1E1E;
+  --input-color: #F9FAFB;
+  --input-border: #2A2A2A;
+  --input-placeholder: #6B7280;
+  --scrollbar-track: #1A1A1A;
+  --scrollbar-thumb: #3A3A3A;
+  --glass-bg: rgba(26, 26, 26, 0.85);
+  --sidebar-bg: #111111;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.light-theme {
+  --color-bg: #F0F4F8;
+  --color-card: #FFFFFF;
+  --color-card2: #F5F7FA;
+  --color-border: #E2E8F0;
+  --color-muted: #94A3B8;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+
+  --input-bg: #FFFFFF;
+  --input-color: #0F172A;
+  --input-border: #CBD5E1;
+  --input-placeholder: #94A3B8;
+  --scrollbar-track: #F1F5F9;
+  --scrollbar-thumb: #CBD5E1;
+  --glass-bg: rgba(240, 244, 248, 0.9);
+  --sidebar-bg: #FFFFFF;
 }
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+
+/* ── Hour Sagrada 3AM ────────────────────────────────────────── */
+.hour3-theme {
+  --color-bg: #0A0014;
+  --color-card: #120020;
+  --color-card2: #180030;
+  --color-border: #3D0066;
+  --sidebar-bg: #0D0018;
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.4);
-  border-radius: 9999px;
+
+/* ── Base ────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.8);
+
+html, body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2563EB; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Forms ───────────────────────────────────────────────────── */
+input, textarea, select {
+  background-color: var(--input-bg);
+  color: var(--input-color);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--input-placeholder);
+}
+
+select option {
+  background: var(--input-bg);
+  color: var(--input-color);
+}
+
+/* ── Utility classes ─────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.accent-gradient {
+  background: linear-gradient(135deg, #1D4ED8, #3B82F6);
+}
+
+.accent-gradient-text {
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hour3-glow {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* ── Page transitions ────────────────────────────────────────── */
+.page-enter {
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-card) 25%, var(--color-card2) 50%, var(--color-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-60px); opacity: 0; }
+}
+
+.float-up {
+  animation: floatUp 1.2s ease-out forwards;
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.4); }
+  50% { box-shadow: 0 0 45px rgba(37, 99, 235, 0.85), 0 0 90px rgba(37, 99, 235, 0.3); }
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+.star-twinkle {
+  animation: starTwinkle var(--duration, 2s) ease-in-out infinite;
+}
+

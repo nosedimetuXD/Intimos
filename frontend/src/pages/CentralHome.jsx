@@ -2,39 +2,38 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { servicesApi, centralApi, pointsApi } from '../api'
 import { 
-  ShieldAlert, 
+  LayoutDashboard, 
   Calendar, 
   Users, 
   Plus, 
-  CheckCircle2, 
-  DollarSign, 
-  Megaphone, 
   Sparkles,
   Search,
-  Trash2
+  Trash2,
+  Clock,
+  MapPin,
+  CheckCircle2
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { Card, Btn } from '../components/ui'
 
 export default function CentralHome() {
   const { currentUser, isPastoral, canManageUsers } = useAuth()
-  const [tab, setTab] = useState('services') // services, users, points, camp, finances, announcements
+  const [tab, setTab] = useState('services')
   
   // Data states
   const [services, setServices] = useState([])
   const [users, setUsers] = useState([])
   const [selectedService, setSelectedService] = useState(null)
   const [attendances, setAttendances] = useState([])
-  const [campPayments, setCampPayments] = useState([])
-  const [finances, setFinances] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // Modals / forms
+  // Forms
   const [newServiceTitle, setNewServiceTitle] = useState('')
   const [newServiceDate, setNewServiceDate] = useState('')
   const [newServiceLocation, setNewServiceLocation] = useState('')
   
-  // Points adjust
+  // Points adjustment
   const [targetUserId, setTargetUserId] = useState('')
   const [adjustPointsVal, setAdjustPointsVal] = useState('')
   const [adjustReason, setAdjustReason] = useState('')
@@ -43,10 +42,6 @@ export default function CentralHome() {
   useEffect(() => {
     loadServices()
     if (canManageUsers) loadUsers()
-    if (isPastoral) {
-      loadCamp()
-      loadFinances()
-    }
   }, [tab])
 
   const loadServices = async () => {
@@ -75,24 +70,6 @@ export default function CentralHome() {
     try {
       const data = await centralApi.getUsers()
       setUsers(data || [])
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const loadCamp = async () => {
-    try {
-      const data = await centralApi.getCampPayments()
-      setCampPayments(data || [])
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const loadFinances = async () => {
-    try {
-      const data = await centralApi.getFinances()
-      setFinances(data || [])
     } catch (err) {
       console.error(err)
     }
@@ -131,139 +108,124 @@ export default function CentralHome() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4 pb-24 sm:pb-6">
       {/* Header */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base font-black text-white">Central de Liderazgo</h1>
-            <p className="text-[11px] text-slate-400">Gestión de servicios, asistencia y ministerio</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center font-bold text-accent-light">
+          <LayoutDashboard size={20} />
+        </div>
+        <div>
+          <h1 className="text-lg font-black text-text-primary">Central de Liderazgo</h1>
+          <p className="text-xs text-muted">Gestión de servicios, asistencia y puntos del ministerio</p>
         </div>
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex gap-2 overflow-x-auto pb-1 text-xs">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
         <button
           onClick={() => setTab('services')}
-          className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-colors ${
-            tab === 'services' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+          className={`px-4 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
+            tab === 'services' ? 'bg-accent text-white shadow-md shadow-accent/25' : 'bg-card text-muted border border-border hover:text-text-primary'
           }`}
         >
-          Servicios y Asistencia
+          📅 Servicios y Asistencia
         </button>
         <button
           onClick={() => setTab('points')}
-          className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-colors ${
-            tab === 'points' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+          className={`px-4 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
+            tab === 'points' ? 'bg-accent text-white shadow-md shadow-accent/25' : 'bg-card text-muted border border-border hover:text-text-primary'
           }`}
         >
-          Asignar Puntos
+          ⭐ Asignar Puntos
         </button>
         {canManageUsers && (
           <button
             onClick={() => setTab('users')}
-            className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-colors ${
-              tab === 'users' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+            className={`px-4 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
+              tab === 'users' ? 'bg-accent text-white shadow-md shadow-accent/25' : 'bg-card text-muted border border-border hover:text-text-primary'
             }`}
           >
-            Usuarios ({users.length})
+            👥 Usuarios ({users.length})
           </button>
-        )}
-        {isPastoral && (
-          <>
-            <button
-              onClick={() => setTab('camp')}
-              className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-colors ${
-                tab === 'camp' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
-              }`}
-            >
-              Campamento
-            </button>
-            <button
-              onClick={() => setTab('finances')}
-              className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-colors ${
-                tab === 'finances' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
-              }`}
-            >
-              Finanzas
-            </button>
-          </>
         )}
       </div>
 
       {/* Tab: Services & Attendance */}
       {tab === 'services' && (
-        <div className="space-y-5">
-          {/* Create Service Form */}
-          <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-indigo-400" />
-              Crear Nuevo Servicio
-            </h3>
+        <div className="space-y-4">
+          {/* Create Service Card */}
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <Plus size={15} className="text-accent-light" />
+              <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">
+                Crear Nuevo Encuentro
+              </h2>
+            </div>
 
             <form onSubmit={handleCreateService} className="space-y-3">
-              <div>
+              <div className="space-y-1">
+                <label className="text-xs text-text-secondary font-semibold">Título del servicio</label>
                 <input
                   type="text"
                   required
-                  placeholder="Título del servicio (ej. Noche de Conexión)"
+                  placeholder="Ej. Noche de Conexión y Adoración"
                   value={newServiceTitle}
                   onChange={(e) => setNewServiceTitle(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input
-                  type="datetime-local"
-                  required
-                  value={newServiceDate}
-                  onChange={(e) => setNewServiceDate(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Lugar (ej. Templo Principal)"
-                  value={newServiceLocation}
-                  onChange={(e) => setNewServiceLocation(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
-                />
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary font-semibold">Fecha y Hora</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={newServiceDate}
+                    onChange={(e) => setNewServiceDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary font-semibold">Lugar</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Auditorio Principal"
+                    value={newServiceLocation}
+                    onChange={(e) => setNewServiceLocation(e.target.value)}
+                  />
+                </div>
               </div>
-              <button
-                type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
-              >
+
+              <Btn type="submit" fullWidth>
                 Publicar Servicio
-              </button>
+              </Btn>
             </form>
-          </div>
+          </Card>
 
           {/* List Services & Select Attendance */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <Card>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
               Servicios Registrados
-            </h3>
+            </h2>
 
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               {services.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => { setSelectedService(s); loadAttendance(s.id); }}
-                  className={`p-3 rounded-2xl border text-left min-w-[180px] shrink-0 transition-all ${
+                  className={`p-3 rounded-2xl border text-left min-w-[190px] shrink-0 transition-all ${
                     selectedService?.id === s.id
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg'
-                      : 'bg-slate-950/60 border-slate-800/80 text-slate-300'
+                      ? 'bg-accent/15 border-accent text-accent-light shadow-md'
+                      : 'bg-card2 border-border text-text-primary hover:border-accent/40'
                   }`}
                 >
-                  <h4 className="text-xs font-bold truncate">{s.title}</h4>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-xs font-bold truncate">{s.title}</p>
+                  <p className="text-[10px] text-muted mt-1">
                     {format(new Date(s.scheduled_at), "d MMM · h:mm a", { locale: es })}
                   </p>
-                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded mt-2 inline-block ${
-                    s.status === 'upcoming' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full mt-2 inline-block border ${
+                    s.status === 'upcoming' 
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' 
+                      : 'bg-card text-muted border-border'
                   }`}>
                     {s.status}
                   </span>
@@ -272,25 +234,25 @@ export default function CentralHome() {
             </div>
 
             {selectedService && (
-              <div className="pt-3 border-t border-slate-800 space-y-3">
+              <div className="pt-4 mt-3 border-t border-border space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-white">
+                  <h3 className="text-xs font-bold text-text-primary">
                     Asistencias en "{selectedService.title}" ({attendances.length})
-                  </h4>
-                  <span className="text-[11px] text-slate-400">
-                    Token QR: <code className="bg-slate-950 px-2 py-0.5 rounded text-indigo-300">{selectedService.qr_token.slice(0, 8)}...</code>
+                  </h3>
+                  <span className="text-[10px] text-muted font-mono bg-card2 px-2 py-0.5 rounded-lg border border-border">
+                    QR: {selectedService.qr_token.slice(0, 8)}...
                   </span>
                 </div>
 
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   {attendances.length === 0 ? (
-                    <p className="text-xs text-slate-500 py-4 text-center">Nadie ha hecho check-in en este servicio aún.</p>
+                    <p className="text-xs text-muted py-4 text-center">Nadie ha hecho check-in en este servicio aún.</p>
                   ) : (
                     attendances.map((a) => (
-                      <div key={a.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/60 text-xs">
+                      <div key={a.id} className="flex items-center justify-between p-2.5 rounded-xl bg-card2 border border-border text-xs">
                         <div>
-                          <p className="font-bold text-white">{a.user_name}</p>
-                          <p className="text-[10px] text-slate-400">
+                          <p className="font-bold text-text-primary">{a.user_name}</p>
+                          <p className="text-[10px] text-muted">
                             {format(new Date(a.check_in_time), "h:mm:ss a")} {a.is_early && <span className="text-emerald-400 font-semibold">(Temprano +75)</span>}
                           </p>
                         </div>
@@ -301,9 +263,9 @@ export default function CentralHome() {
                               loadAttendance(selectedService.id)
                             }
                           }}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400"
+                          className="p-1.5 rounded-lg text-muted hover:text-rose-400 transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     ))
@@ -311,32 +273,33 @@ export default function CentralHome() {
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Tab: Points Manual Adjustment */}
       {tab === 'points' && (
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            Asignar o Corregir Puntos
-          </h3>
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={15} className="text-amber-400" />
+            <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">
+              Asignar o Corregir Puntos
+            </h2>
+          </div>
 
           {adjustMsg && (
-            <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">
+            <div className="p-3 rounded-xl bg-accent/15 border border-accent/30 text-accent-light text-xs font-semibold mb-3">
               {adjustMsg}
             </div>
           )}
 
           <form onSubmit={handleAdjustPoints} className="space-y-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">Seleccionar Joven</label>
+            <div className="space-y-1">
+              <label className="text-xs text-text-secondary font-semibold">Seleccionar Joven</label>
               <select
                 required
                 value={targetUserId}
                 onChange={(e) => setTargetUserId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500"
               >
                 <option value="">-- Selecciona un usuario --</option>
                 {users.map(u => (
@@ -345,63 +308,56 @@ export default function CentralHome() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">Puntos a otorgar o descontar (ej. 50 o -20)</label>
+            <div className="space-y-1">
+              <label className="text-xs text-text-secondary font-semibold">Puntos a otorgar o descontar (ej. 50 o -20)</label>
               <input
                 type="number"
                 required
                 placeholder="Cantidad de puntos"
                 value={adjustPointsVal}
                 onChange={(e) => setAdjustPointsVal(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
               />
             </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">Motivo (Obligatorio para auditoría)</label>
+            <div className="space-y-1">
+              <label className="text-xs text-text-secondary font-semibold">Motivo del ajuste</label>
               <input
                 type="text"
                 required
-                placeholder="Motivo del ajuste"
+                placeholder="Motivo (ej. Participación especial, dinámica)"
                 value={adjustReason}
                 onChange={(e) => setAdjustReason(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
               />
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-lg"
-            >
-              Registrar Puntos en Ledger
-            </button>
+            <Btn type="submit" fullWidth>
+              Registrar Puntos
+            </Btn>
           </form>
-        </div>
+        </Card>
       )}
 
       {/* Tab: Users Management */}
       {tab === 'users' && canManageUsers && (
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+        <Card>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
             Directorio de Usuarios ({users.length})
-          </h3>
+          </h2>
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {users.map((u) => (
-              <div key={u.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-xs">
+              <div key={u.id} className="flex items-center justify-between p-2.5 rounded-xl bg-card2 border border-border text-xs">
                 <div>
-                  <h4 className="font-bold text-white">{u.full_name}</h4>
-                  <p className="text-[10px] text-slate-400">{u.email} · {u.phone || 'Sin cel'}</p>
+                  <h4 className="font-bold text-text-primary">{u.full_name}</h4>
+                  <p className="text-[10px] text-muted">{u.email} {u.phone ? `· ${u.phone}` : ''}</p>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-0.5 rounded-full capitalize">
-                    {u.role}
-                  </span>
-                </div>
+                <span className="text-[10px] font-bold bg-accent/15 text-accent-light border border-accent/25 px-2.5 py-0.5 rounded-full capitalize">
+                  {u.role}
+                </span>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )

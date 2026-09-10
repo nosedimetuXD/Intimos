@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Sparkles, Lock, Mail, User, Phone, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, LogIn, UserPlus, Mail, Lock, User, Phone } from 'lucide-react'
+import { Btn } from '../components/ui'
 
 export default function LoginScreen() {
   const [isRegister, setIsRegister] = useState(false)
@@ -9,6 +10,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -28,44 +30,65 @@ export default function LoginScreen() {
       }
       navigate('/home')
     } catch (err) {
-      setError(err.message || 'Error al autenticar')
+      setError(err.message || 'Error al autenticar. Verifica tus credenciales.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-sm">
-        {/* Brand Logo Header */}
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 sm:px-6 py-10 bg-bg relative overflow-hidden">
+      {/* Background ambient lighting */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-accent/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-sm relative z-10">
+        {/* Brand Logo & Slogan */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 mx-auto flex items-center justify-center font-black text-3xl text-white shadow-xl shadow-indigo-500/25 mb-3">
-            Í
+          <div className="relative mx-auto mb-5 w-fit">
+            {/* Glow ring */}
+            <div className="absolute inset-0 rounded-3xl accent-gradient opacity-40 blur-2xl scale-125 pointer-events-none" />
+            <div className="relative w-24 h-24 rounded-3xl accent-gradient flex flex-col items-center justify-center shadow-2xl shadow-accent/50 gap-1 border border-blue-400/30">
+              <span className="text-white/70 text-[11px] tracking-[0.3em] uppercase font-semibold leading-none">grupo</span>
+              <span className="text-white font-black text-2xl tracking-tight leading-none">Íntimos</span>
+              <div className="flex gap-1 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
+                <span className="w-3.5 h-1.5 rounded-full bg-white/80" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
+              </div>
+            </div>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Íntimos — De Cerca</h1>
-          <p className="text-xs text-slate-400 mt-1 italic">
-            "De conocer sobre Jesús, a conocer a Jesús."
+          
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight mb-1">De Cerca</h1>
+          <p className="text-xs text-muted italic leading-relaxed">
+            "De conocer sobre Jesús,<br />a conocer a Jesús."
           </p>
         </div>
 
         {/* Card Form */}
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-xl">
-          {/* Tabs */}
-          <div className="flex bg-slate-950/60 p-1 rounded-xl mb-6 border border-slate-800/50">
+        <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-xl">
+          {/* Tab Selector */}
+          <div className="flex bg-card2 p-1 rounded-2xl mb-5 border border-border">
             <button
               type="button"
-              onClick={() => { setIsRegister(false); setError('') }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                !isRegister ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              onClick={() => { setIsRegister(false); setError(''); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                !isRegister 
+                  ? 'bg-accent text-white shadow-md shadow-accent/30' 
+                  : 'text-muted hover:text-text-primary'
               }`}
             >
               Iniciar Sesión
             </button>
             <button
               type="button"
-              onClick={() => { setIsRegister(true); setError('') }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                isRegister ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              onClick={() => { setIsRegister(true); setError(''); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                isRegister 
+                  ? 'bg-accent text-white shadow-md shadow-accent/30' 
+                  : 'text-muted hover:text-text-primary'
               }`}
             >
               Crear Cuenta
@@ -73,7 +96,7 @@ export default function LoginScreen() {
           </div>
 
           {error && (
-            <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl p-3 mb-4 font-medium">
+            <div className="px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 mb-4 font-medium leading-relaxed">
               {error}
             </div>
           )}
@@ -81,81 +104,88 @@ export default function LoginScreen() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
               <>
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">Nombre Completo</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-text-secondary">Nombre Completo</label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                     <input
                       type="text"
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Ej. Daniel Martínez"
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                      autoComplete="name"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">Teléfono / WhatsApp</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-text-secondary">Teléfono / WhatsApp</label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+57 300 000 0000"
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                      autoComplete="tel"
                     />
                   </div>
                 </div>
               </>
             )}
 
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">Correo Electrónico</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@correo.com"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-text-secondary">Correo Electrónico</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                autoComplete="email"
+              />
             </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">Contraseña</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-text-secondary">Contraseña</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 <input
-                  type="password"
+                  type={showPw ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                  autoComplete="current-password"
+                  style={{ paddingRight: '44px' }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(s => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-text-primary p-1"
+                >
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
-            <button
+            <Btn
               type="submit"
+              fullWidth
+              size="lg"
               disabled={loading}
-              className="w-full mt-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="mt-2"
             >
               {loading ? (
-                <span>Procesando...</span>
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Procesando...
+                </span>
               ) : (
-                <>
-                  <span>{isRegister ? 'Registrarse (+50 pts)' : 'Entrar a Íntimos'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+                <span className="flex items-center gap-2">
+                  {isRegister ? <UserPlus size={16} /> : <LogIn size={16} />}
+                  <span>{isRegister ? 'Registrarse (+50 pts)' : 'Ingresar'}</span>
+                </span>
               )}
-            </button>
+            </Btn>
           </form>
         </div>
       </div>
