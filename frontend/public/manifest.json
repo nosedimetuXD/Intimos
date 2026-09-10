@@ -1,0 +1,49 @@
+{
+  "name": "Íntimos — De Cerca",
+  "short_name": "Íntimos",
+  "description": "De conocer sobre Jesús, a conocer a Jesús.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F0F0F",
+  "theme_color": "#0F0F0F",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Servicios",
+      "short_name": "Servicios",
+      "description": "Próximos cultos y reuniones",
+      "url": "/servicios",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Biblia",
+      "short_name": "Biblia",
+      "description": "Lectura bíblica RVR 1960 y NVI",
+      "url": "/biblia",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Daily Challenge",
+      "short_name": "Retos",
+      "description": "Juegos y retos bíblicos diarios",
+      "url": "/retos",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["lifestyle", "social", "education"]
+}

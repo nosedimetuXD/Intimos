@@ -33,7 +33,10 @@ import {
   Moon, 
   Sun, 
   LogOut, 
-  Sparkles 
+  Sparkles,
+  Download,
+  Smartphone,
+  Share
 } from 'lucide-react'
 import { Avatar } from '../ui'
 
@@ -103,6 +106,40 @@ export default function Layout({ children }) {
   const isCentral = location.pathname.startsWith('/central')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const [showIosPrompt, setShowIosPrompt] = useState(false)
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+    setIsStandalone(standalone)
+
+    const handleBeforeInstall = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+  }, [])
+
+  const handleInstallClick = async () => {
+    const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())
+    if (isIos) {
+      setShowIosPrompt(true)
+      return
+    }
+    if (!deferredPrompt) {
+      alert('Para instalar Íntimos como app en tu dispositivo, abre el menú de tu navegador (los tres puntos) y selecciona "Instalar aplicación" o "Agregar a pantalla principal".')
+      return
+    }
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null)
+      setIsStandalone(true)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -286,6 +323,20 @@ export default function Layout({ children }) {
             </NavLink>
           )}
 
+          {/* PWA Install Button */}
+          {!isStandalone && (
+            <button
+              onClick={handleInstallClick}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-accent-light hover:bg-accent/15 transition-colors font-semibold ${
+                sidebarCollapsed ? 'justify-center' : ''
+              }`}
+              title={sidebarCollapsed ? 'Instalar App' : ''}
+            >
+              <Download size={15} />
+              {!sidebarCollapsed && <span>Instalar App</span>}
+            </button>
+          )}
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -464,6 +515,17 @@ export default function Layout({ children }) {
                 </NavLink>
               )}
 
+              {/* PWA Install Button */}
+              {!isStandalone && (
+                <button
+                  onClick={() => { setSidebarOpen(false); handleInstallClick(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-accent-light bg-accent/10 hover:bg-accent/20 transition-colors font-semibold"
+                >
+                  <Download size={15} />
+                  <span>Instalar Aplicación (PWA)</span>
+                </button>
+              )}
+
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
@@ -563,6 +625,49 @@ export default function Layout({ children }) {
           </nav>
         )}
       </div>
+
+      {/* iOS PWA Install Guide Modal */}
+      {showIosPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" onClick={() => setShowIosPrompt(false)}>
+          <div className="bg-card border border-border rounded-2xl max-w-sm w-full p-5 space-y-4 text-text-primary shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <Smartphone size={18} className="text-accent-light" />
+                <span>Instalar Íntimos en iOS</span>
+              </div>
+              <button onClick={() => setShowIosPrompt(false)} className="text-muted hover:text-text-primary p-1">
+                <X size={18} />
+              </button>
+            </div>
+            
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Para instalar la aplicación en tu iPhone o iPad sin descargar desde App Store:
+            </p>
+
+            <ol className="text-xs space-y-2.5 text-text-secondary">
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-accent/20 text-accent-light font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
+                <span>En Safari, toca el botón <strong>Compartir</strong> <Share size={13} className="inline mx-1 text-accent-light" /> en la barra inferior.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-accent/20 text-accent-light font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
+                <span>Desplázate por el menú y selecciona <strong>"Añadir a pantalla de inicio"</strong>.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-accent/20 text-accent-light font-bold flex items-center justify-center flex-shrink-0 text-[11px]">3</span>
+                <span>Toca <strong>Añadir</strong> en la esquina superior derecha.</span>
+              </li>
+            </ol>
+
+            <button
+              onClick={() => setShowIosPrompt(false)}
+              className="w-full py-2.5 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent-hover transition-colors"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
