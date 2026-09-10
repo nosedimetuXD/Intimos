@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { BookOpen, ChevronLeft, ChevronRight, Search, ZoomIn, ZoomOut, Loader2 } from 'lucide-react'
+import { BookOpen, ChevronLeft, ChevronRight, Search, ZoomIn, ZoomOut, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 import { Card } from '../components/ui'
 
 const TRANSLATIONS = [
-  { id: 'rvr1960', label: 'RVR 1960', lang: 'ES', apiCode: 'RVR1960' },
+  { id: 'rvr1960', label: 'RVR 1960', lang: 'ES', apiCode: 'RV1960' },
   { id: 'nvi', label: 'NVI', lang: 'ES', apiCode: 'NVI' },
 ]
 
@@ -82,7 +82,9 @@ export default function BibleScreen() {
   const [chapter, setChapter] = useState(3)
   const [verses, setVerses] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [highlightVerse, setHighlightVerse] = useState(null)
   const [showBooks, setShowBooks] = useState(false)
   const [bookSearch, setBookSearch] = useState('')
   const [fontSize, setFontSize] = useState(15)
@@ -91,35 +93,58 @@ export default function BibleScreen() {
 
   const fetchChapter = useCallback(async (bookId, ch, transId) => {
     setLoading(true)
-    const apiCode = TRANSLATIONS.find(t => t.id === transId)?.apiCode || 'RVR1960'
-    const cacheKey = `bible_cache_${apiCode}_${bookId}_${ch}`
+    setError('')
+    const apiCode = TRANSLATIONS.find(t => t.id === transId)?.apiCode || 'RV1960'
+    const cacheKey = `dc_bible_v2_${apiCode}_${bookId}_${ch}`
     
     // Check local cache
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      try {
-        setVerses(JSON.parse(cached))
-        setLoading(false)
-        return
-      } catch {}
-    }
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        const parsedCached = JSON.parse(cached)
+        if (Array.isArray(parsedCached) && parsedCached.length > 0) {
+          setVerses(parsedCached)
+          setLoading(false)
+          return
+        }
+      }
+    } catch {}
 
     try {
-      const res = await fetch(`https://bolls.life/get-chapter/${apiCode}/${bookId}/${ch}/`)
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 12000)
+      const res = await fetch(`https://bolls.life/get-text/${apiCode}/${bookId}/${ch}/`, {
+        signal: controller.signal
+      })
+      clearTimeout(timer)
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
+
       if (Array.isArray(data) && data.length > 0) {
-        const parsed = data.map(v => ({ verse: v.verse, text: v.text.replace(/<[^>]*>/g, '').trim() }))
+        const parsed = data.map(v => ({
+          verse: v.verse,
+          text: (v.text || '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&quot;/g, '"')
+            .replace(/&apos;/g, "'")
+            .replace(/&amp;/g, '&')
+            .trim()
+        }))
         setVerses(parsed)
-        localStorage.setItem(cacheKey, JSON.stringify(parsed))
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(parsed))
+        } catch {}
       } else {
-        throw new Error('Sin datos')
+        throw new Error('No se encontró contenido para este capítulo.')
       }
     } catch (e) {
-      setVerses([
-        { verse: 16, text: "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna." },
-        { verse: 17, text: "Porque no envió Dios a su Hijo al mundo para condenar al mundo, sino para que el mundo sea salvo por él." }
-      ])
+      console.error('Error cargando pasaje:', e)
+      setError(e.name === 'AbortError' 
+        ? 'Tiempo de espera agotado. Verifica tu conexión a internet.' 
+        : 'No se pudo cargar el capítulo completo. Verifica tu conexión a internet.')
+      setVerses([])
     } finally {
       setLoading(false)
     }
@@ -130,6 +155,7 @@ export default function BibleScreen() {
   }, [currentBook.id, chapter, translation, fetchChapter])
 
   const prevChapter = () => {
+    setHighlightVerse(null)
     if (chapter > 1) {
       setChapter(c => c - 1)
     } else if (bookIdx > 0) {
@@ -139,6 +165,7 @@ export default function BibleScreen() {
   }
 
   const nextChapter = () => {
+    setHighlightVerse(null)
     if (chapter < currentBook.chapters) {
       setChapter(c => c + 1)
     } else if (bookIdx < BOOKS.length - 1) {
@@ -155,12 +182,14 @@ export default function BibleScreen() {
     const lastPart = parts[parts.length - 1]
     const chVerse = lastPart.includes(':') ? lastPart.split(':') : [lastPart, '']
     const chNum = parseInt(chVerse[0])
+    const vNum = chVerse[1] ? parseInt(chVerse[1]) : null
     const bookName = parts.slice(0, -1).join(' ').toLowerCase()
     
     const found = BOOKS.findIndex(b => b.name.toLowerCase().startsWith(bookName))
     if (found >= 0 && chNum > 0) {
       setBookIdx(found)
       setChapter(Math.min(chNum, BOOKS[found].chapters))
+      setHighlightVerse(vNum)
       setSearch('')
     }
   }
@@ -208,7 +237,10 @@ export default function BibleScreen() {
         {TRANSLATIONS.map(t => (
           <button
             key={t.id}
-            onClick={() => setTranslation(t.id)}
+            onClick={() => {
+              setHighlightVerse(null)
+              setTranslation(t.id)
+            }}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors ${
               translation === t.id 
                 ? 'bg-accent text-white border-accent shadow-md shadow-accent/25' 
@@ -290,6 +322,7 @@ export default function BibleScreen() {
                   onClick={() => {
                     setBookIdx(idx)
                     setChapter(1)
+                    setHighlightVerse(null)
                     setShowBooks(false)
                     setBookSearch('')
                   }}
@@ -323,16 +356,41 @@ export default function BibleScreen() {
             <Loader2 size={24} className="animate-spin text-accent-light" />
             <span>Cargando pasaje bíblico...</span>
           </div>
+        ) : error ? (
+          <div className="py-16 text-center text-xs space-y-3">
+            <div className="w-10 h-10 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
+              <AlertCircle size={20} />
+            </div>
+            <p className="text-red-400 font-medium">{error}</p>
+            <button
+              onClick={() => fetchChapter(currentBook.id, chapter, translation)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-white font-bold text-xs hover:bg-accent-hover transition-colors"
+            >
+              <RefreshCw size={14} />
+              Reintentar
+            </button>
+          </div>
         ) : (
           <div className="space-y-3.5" style={{ fontSize: `${fontSize}px` }}>
-            {verses.map((v) => (
-              <p key={v.verse} className="text-text-primary leading-relaxed">
-                <span className="font-bold text-accent-light text-xs select-none mr-2">
-                  {v.verse}
-                </span>
-                <span>{v.text}</span>
-              </p>
-            ))}
+            {verses.map((v) => {
+              const isHighlighted = highlightVerse === v.verse
+              return (
+                <p 
+                  key={v.verse} 
+                  id={`v-${v.verse}`}
+                  className={`leading-relaxed transition-colors rounded-lg px-2 py-1 -mx-2 ${
+                    isHighlighted 
+                      ? 'bg-accent/20 text-accent-light font-semibold' 
+                      : 'text-text-primary'
+                  }`}
+                >
+                  <span className="font-bold text-accent-light text-xs select-none mr-2">
+                    {v.verse}
+                  </span>
+                  <span>{v.text}</span>
+                </p>
+              )
+            })}
           </div>
         )}
 
