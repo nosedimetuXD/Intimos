@@ -95,7 +95,23 @@ func (s *GameService) SubmitGame(ctx context.Context, userID string, gameType do
 		earnedPoints = 100
 	}
 
-	reason := fmt.Sprintf("Reto diario: %s (Puntaje: %d/%d)", gameType, req.Score, req.MaxScore)
+	gameTitle := string(gameType)
+	switch gameType {
+	case domain.GameVersoFlash:
+		gameTitle = "Verso Flash"
+	case domain.GameQueHarias:
+		gameTitle = "¿Qué Harías?"
+	case domain.GameReto60:
+		gameTitle = "Reto 60"
+	case domain.GameVerdaderoFalso:
+		gameTitle = "Verdadero o Falso"
+	case domain.GameAhorcado:
+		gameTitle = "Ahorcado Bíblico"
+	case domain.GameOrdenaVerso:
+		gameTitle = "Ordena el Versículo"
+	}
+
+	reason := fmt.Sprintf("Reto diario: %s (Puntaje: %d/%d)", gameTitle, req.Score, req.MaxScore)
 	res, err := s.pointsService.AwardPoints(ctx, userID, earnedPoints, reason, domain.CategoryGame, nil, nil)
 	if err != nil {
 		return nil, err

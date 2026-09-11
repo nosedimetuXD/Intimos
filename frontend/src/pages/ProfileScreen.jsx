@@ -27,6 +27,17 @@ import { evaluateBadges } from '../utils/badgeEngine'
 
 const CATEGORIES = ['Todas', 'Presencia', 'Palabra', 'Juegos', 'Comunidad', 'Servicio', 'Exclusivo']
 
+function formatReason(reason) {
+  if (!reason) return 'Movimiento de puntos'
+  return reason
+    .replace(/verso_flash/gi, 'Verso Flash')
+    .replace(/que_harias/gi, '¿Qué Harías?')
+    .replace(/reto_60/gi, 'Reto 60')
+    .replace(/verdadero_falso/gi, 'Verdadero o Falso')
+    .replace(/ahorcado/gi, 'Ahorcado Bíblico')
+    .replace(/ordena_verso/gi, 'Ordena el Versículo')
+}
+
 export default function ProfileScreen() {
   const { currentUser, totalPoints, monthPoints, level, logout } = useAuth()
   const [history, setHistory] = useState([])
@@ -257,7 +268,7 @@ export default function ProfileScreen() {
                     <Sparkles size={13} className="text-accent-light" />
                   </div>
                   <div>
-                    <p className="font-semibold text-text-primary leading-tight">{h.reason}</p>
+                    <p className="font-semibold text-text-primary leading-tight">{formatReason(h.reason)}</p>
                     <p className="text-[10px] text-muted mt-0.5">
                       {h.created_at ? format(new Date(h.created_at), "d 'de' MMMM", { locale: es }) : 'Reciente'}
                     </p>
