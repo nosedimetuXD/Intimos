@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { pointsApi } from '../api'
 import { 
@@ -13,33 +13,26 @@ import {
   Flame,
   Phone,
   Mail,
-  Check
+  Check,
+  CheckCircle2,
+  Lock,
+  ChevronRight,
+  Info
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Card, Avatar, Btn, Badge } from '../components/ui'
+import { Card, Avatar, Btn, Badge, Modal, LevelBadge } from '../components/ui'
+import { BADGES } from '../data/badges'
+import { evaluateBadges } from '../utils/badgeEngine'
 
-const LEVEL_EMOJIS = {
-  'Semilla': '🌱',
-  'Buscador': '🔍',
-  'Discípulo': '🌿',
-  'Guerrero': '⚔️',
-  'Pilar': '🏛️',
-  'Líder': '👑'
-}
-
-const BADGES = [
-  { id: 'first_login', name: 'Primer Paso', icon: '👣', desc: 'Iniciaste sesión en la app' },
-  { id: 'streak_3', name: 'Constante', icon: '🔥', desc: 'Racha de 3 días activo' },
-  { id: 'verse_reader', name: 'Buscador', icon: '📖', desc: 'Medita en el versículo del día' },
-  { id: 'quiz_master', name: 'Sabio', icon: '⚡', desc: 'Completa un reto bíblico con 100%' },
-  { id: 'church_fellow', name: 'Fiel', icon: '⛪', desc: 'Asiste a los servicios juveniles' },
-]
+const CATEGORIES = ['Todas', 'Presencia', 'Palabra', 'Juegos', 'Comunidad', 'Servicio', 'Exclusivo']
 
 export default function ProfileScreen() {
   const { currentUser, totalPoints, monthPoints, level, logout } = useAuth()
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('Todas')
+  const [selectedBadge, setSelectedBadge] = useState(null)
 
   useEffect(() => {
     pointsApi.getHistory(30)
@@ -48,7 +41,36 @@ export default function ProfileScreen() {
       .finally(() => setLoading(false))
   }, [])
 
-  const levelEmoji = LEVEL_EMOJIS[level] || '🌱'
+  // Evaluate badge progress
+  const evaluated = useMemo(() => {
+    // Gather context from local storage + user
+    let reflections = []
+    let gameAttempts = []
+    let suggestions = []
+
+    try {
+      reflections = JSON.parse(localStorage.getItem('intimos_reflections') || '[]')
+      suggestions = JSON.parse(localStorage.getItem(`intimos_voice_${currentUser?.id}`) || '[]')
+    } catch {}
+
+    return evaluateBadges(currentUser, {
+      attendance: [],
+      services: [],
+      reflections,
+      gameAttempts,
+      ranking: [],
+      suggestions
+    })
+  }, [currentUser])
+
+  const filteredBadges = useMemo(() => {
+    if (selectedCategory === 'Todas') return BADGES
+    return BADGES.filter(b => b.group === selectedCategory)
+  }, [selectedCategory])
+
+  const unlockedCount = useMemo(() => {
+    return Object.values(evaluated).filter(e => e.done).length
+  }, [evaluated])
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4 pb-24 sm:pb-6">
@@ -57,9 +79,6 @@ export default function ProfileScreen() {
         <div className="flex items-start gap-4">
           <div className="relative flex-shrink-0">
             <Avatar src={currentUser?.photo} name={currentUser?.full_name} size="xl" />
-            <div className="absolute -bottom-1 -right-1 text-xl leading-none drop-shadow">
-              {levelEmoji}
-            </div>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -78,9 +97,7 @@ export default function ProfileScreen() {
             )}
 
             <div className="mt-2.5 flex items-center gap-2">
-              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-accent-light">
-                {levelEmoji} {level}
-              </span>
+              <LevelBadge level={level} size="sm" />
               <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-card2 border border-border text-text-secondary capitalize">
                 {currentUser?.role || 'Miembro'}
               </span>
@@ -104,32 +121,74 @@ export default function ProfileScreen() {
         </div>
       </Card>
 
-      {/* Badges / Insignias */}
-      <Card>
-        <div className="flex items-center gap-2 mb-3">
-          <Award size={16} className="text-amber-400" />
-          <h2 className="font-bold text-text-primary text-xs uppercase tracking-wider">
-            Insignias de Fidelidad
-          </h2>
+      {/* Badges / Insignias Section */}
+      <Card className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Award size={16} className="text-amber-400" />
+            <h2 className="font-bold text-text-primary text-xs uppercase tracking-wider">
+              Insignias y Logros
+            </h2>
+          </div>
+          <span className="text-xs font-bold text-accent-light bg-accent/15 px-2.5 py-0.5 rounded-full border border-accent/25">
+            {unlockedCount} / {BADGES.length} desbloqueados
+          </span>
         </div>
 
-        <div className="grid grid-cols-5 gap-2">
-          {BADGES.map((b, idx) => (
-            <div
-              key={b.id}
-              title={`${b.name} — ${b.desc}`}
-              className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center text-center transition-all ${
-                idx < 3
-                  ? 'bg-accent/10 border-accent/30 shadow-sm'
-                  : 'bg-card2/50 border-border/60 opacity-40'
+        {/* Category Filters */}
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === cat
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'bg-card2 text-muted border border-border hover:text-text-primary'
               }`}
             >
-              <span className="text-2xl mb-1">{b.icon}</span>
-              <span className="text-[9px] font-bold text-text-primary truncate w-full leading-tight">
-                {b.name}
-              </span>
-            </div>
+              {cat}
+            </button>
           ))}
+        </div>
+
+        {/* Badges Grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-1">
+          {filteredBadges.map(badge => {
+            const status = evaluated[badge.id] || { current: 0, target: badge.target, done: false, pct: 0 }
+            const IconComp = badge.icon
+
+            return (
+              <button
+                key={badge.id}
+                onClick={() => setSelectedBadge({ ...badge, ...status })}
+                className={`p-3 rounded-2xl border text-center transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-between min-h-[90px] ${
+                  status.done
+                    ? badge.tier === 'exclusivo'
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-md shadow-amber-500/10'
+                      : 'bg-accent/15 border-accent/40 text-accent-light shadow-md shadow-accent/10'
+                    : 'bg-card2/50 border-border/60 text-muted opacity-50 hover:opacity-80'
+                }`}
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-1">
+                  <IconComp size={20} className={status.done ? (badge.tier === 'exclusivo' ? 'text-amber-400' : 'text-accent-light') : 'text-muted'} />
+                </div>
+                <p className="text-[10px] font-bold leading-tight truncate w-full">
+                  {badge.name}
+                </p>
+
+                {/* Progress bar on locked */}
+                {!status.done && (
+                  <div className="w-full bg-border/60 h-1 rounded-full overflow-hidden mt-1.5">
+                    <div
+                      className="bg-accent h-full rounded-full"
+                      style={{ width: `${status.pct}%` }}
+                    />
+                  </div>
+                )}
+              </button>
+            )
+          })}
         </div>
       </Card>
 
@@ -139,33 +198,38 @@ export default function ProfileScreen() {
           <div className="flex items-center gap-2">
             <History size={16} className="text-accent-light" />
             <h2 className="font-bold text-text-primary text-xs uppercase tracking-wider">
-              Historial de Puntos
+              Historial de Puntos Recientes
             </h2>
           </div>
-          <span className="text-[10px] text-muted font-medium">Últimos movimientos</span>
+          <span className="text-[10px] text-muted font-semibold">Últimos 30 días</span>
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-xs text-muted">Cargando movimientos...</div>
+          <div className="py-8 text-center text-xs text-muted">Cargando historial...</div>
         ) : history.length === 0 ? (
-          <div className="py-8 text-center text-xs text-muted">Aún no tienes movimientos registrados.</div>
+          <p className="text-xs text-muted text-center py-6">
+            Aún no tienes movimientos de puntos registrados.
+          </p>
         ) : (
           <div className="space-y-2">
-            {history.map((h) => (
-              <div
-                key={h.id}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-card2 border border-border/70 text-xs"
+            {history.map((h, i) => (
+              <div 
+                key={h.id || i}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-card2/60 border border-border/50 text-xs"
               >
-                <div className="min-w-0 flex-1 pr-2">
-                  <p className="font-bold text-text-primary truncate leading-snug">{h.reason}</p>
-                  <p className="text-[10px] text-muted mt-0.5">
-                    {format(new Date(h.created_at), "d 'de' MMMM, h:mm a", { locale: es })}
-                  </p>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <Sparkles size={13} className="text-accent-light" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-text-primary leading-tight">{h.reason}</p>
+                    <p className="text-[10px] text-muted mt-0.5">
+                      {h.created_at ? format(new Date(h.created_at), "d 'de' MMMM", { locale: es }) : 'Reciente'}
+                    </p>
+                  </div>
                 </div>
-                <span className={`font-black text-xs flex-shrink-0 ${
-                  h.points >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                }`}>
-                  {h.points >= 0 ? `+${h.points}` : h.points} pts
+                <span className="font-black text-emerald-400">
+                  +{h.points} pts
                 </span>
               </div>
             ))}
@@ -173,14 +237,78 @@ export default function ProfileScreen() {
         )}
       </Card>
 
-      {/* LogOut action */}
-      <button
-        onClick={logout}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-colors"
-      >
-        <LogOut size={16} />
-        <span>Cerrar Sesión</span>
-      </button>
+      {/* Logout Action */}
+      <div className="pt-2">
+        <Btn fullWidth variant="danger" onClick={logout}>
+          <LogOut size={16} />
+          <span>Cerrar sesión</span>
+        </Btn>
+      </div>
+
+      {/* Badge Detail Modal */}
+      {selectedBadge && (
+        <Modal
+          open={!!selectedBadge}
+          onClose={() => setSelectedBadge(null)}
+          title="Detalle del Logro"
+        >
+          <div className="p-5 text-center space-y-4">
+            <div className={`w-16 h-16 rounded-2xl mx-auto flex items-center justify-center border shadow-inner ${
+              selectedBadge.done 
+                ? 'bg-accent/20 border-accent/40 text-accent-light' 
+                : 'bg-card2 border-border text-muted'
+            }`}>
+              <selectedBadge.icon size={32} />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-center gap-2">
+                <h3 className="font-black text-base text-text-primary">{selectedBadge.name}</h3>
+                {selectedBadge.tier === 'exclusivo' && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                    Exclusivo
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-text-secondary mt-1">{selectedBadge.desc}</p>
+            </div>
+
+            {/* Status Info */}
+            <div className="p-3.5 rounded-xl bg-card2 border border-border text-left space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted font-bold">Estado:</span>
+                {selectedBadge.done ? (
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <CheckCircle2 size={13} /> Desbloqueado
+                  </span>
+                ) : (
+                  <span className="text-muted font-bold flex items-center gap-1">
+                    <Lock size={12} /> Bloqueado
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted font-bold">Progreso:</span>
+                <span className="font-bold text-text-primary">
+                  {selectedBadge.current} / {selectedBadge.target} ({selectedBadge.pct}%)
+                </span>
+              </div>
+
+              <div className="w-full bg-bg h-2 rounded-full overflow-hidden border border-border">
+                <div
+                  className="bg-accent h-full rounded-full transition-all duration-500"
+                  style={{ width: `${selectedBadge.pct}%` }}
+                />
+              </div>
+            </div>
+
+            <Btn fullWidth onClick={() => setSelectedBadge(null)}>
+              <span>Cerrar</span>
+            </Btn>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Send, MessageSquare, Clock, CheckCircle2 } from 'lucide-react'
+import { Send, MessageSquare, CheckCircle2, Clock, Sparkles, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Card, Btn, Empty } from '../components/ui'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
-const CATEGORIES = ['Dinámica', 'Tema de servicio', 'Mejora de la app', 'Otro']
+const CATEGORIES = [
+  'Culto de Jóvenes',
+  'Alabanza y Música',
+  'Actividades y Salidas',
+  'Enseñanza Bíblica',
+  'Espacio Físico',
+  'Otro'
+]
 
 export default function VoiceScreen() {
   const { currentUser } = useAuth()
@@ -15,32 +20,28 @@ export default function VoiceScreen() {
   const [mySuggestions, setMySuggestions] = useState([])
 
   useEffect(() => {
+    // Load local suggestions
     try {
-      const all = JSON.parse(localStorage.getItem('intimos_suggestions') || '[]')
-      const mine = all.filter(s => s.userId === currentUser?.id)
-      setMySuggestions(mine)
+      const saved = JSON.parse(localStorage.getItem(`intimos_voice_${currentUser?.id}`) || '[]')
+      setMySuggestions(saved)
     } catch {}
-  }, [currentUser?.id, sent])
+  }, [currentUser?.id])
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!text.trim()) return
 
-    const newSug = {
-      id: String(Date.now()),
-      userId: currentUser?.id,
-      userName: currentUser?.full_name || 'Anónimo',
+    const newSuggestion = {
+      id: Date.now(),
       category,
       text: text.trim(),
-      date: new Date().toISOString(),
-      status: 'recibida', // recibida, en_revision, implementada
+      date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
+      status: 'en_revision'
     }
 
-    try {
-      const all = JSON.parse(localStorage.getItem('intimos_suggestions') || '[]')
-      all.unshift(newSug)
-      localStorage.setItem('intimos_suggestions', JSON.stringify(all))
-    } catch {}
+    const updated = [newSuggestion, ...mySuggestions]
+    setMySuggestions(updated)
+    localStorage.setItem(`intimos_voice_${currentUser?.id}`, JSON.stringify(updated))
 
     setText('')
     setSent(true)
@@ -50,11 +51,26 @@ export default function VoiceScreen() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'implementada':
-        return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">Implementada 🎉</span>
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+            <Sparkles size={11} />
+            <span>Implementada</span>
+          </span>
+        )
       case 'en_revision':
-        return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">En revisión 🔍</span>
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+            <Clock size={11} />
+            <span>En revisión</span>
+          </span>
+        )
       default:
-        return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent-light border border-accent/25">Recibida ✓</span>
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent-light border border-accent/25">
+            <Check size={11} />
+            <span>Recibida</span>
+          </span>
+        )
     }
   }
 
@@ -110,7 +126,7 @@ export default function VoiceScreen() {
           {sent ? (
             <div className="text-center py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5">
               <CheckCircle2 size={16} />
-              <span>¡Sugerencia enviada! El equipo pastoral la revisará pronto. 💜</span>
+              <span>¡Sugerencia enviada! El equipo pastoral la revisará pronto.</span>
             </div>
           ) : (
             <Btn type="submit" fullWidth disabled={!text.trim()}>
@@ -129,7 +145,7 @@ export default function VoiceScreen() {
 
         {mySuggestions.length === 0 ? (
           <Empty
-            icon="💬"
+            icon={MessageSquare}
             title="Aún no has enviado sugerencias"
             subtitle="¡Anímate a compartir tus ideas para los próximos cultos o actividades!"
           />

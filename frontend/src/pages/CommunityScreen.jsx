@@ -9,13 +9,13 @@ import {
   Zap, 
   Flame, 
   Calendar,
-  Heart
+  Heart,
+  Gamepad2,
+  CheckCircle2
 } from 'lucide-react'
-import { Card, Avatar, Empty } from '../components/ui'
+import { Card, Avatar, Empty, MedalBadge, MedalIcon, LevelBadge } from '../components/ui'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-
-const POSITION_MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 function RankingRow({ user, rank, pts, isMe, ptsAbove }) {
   return (
@@ -29,9 +29,9 @@ function RankingRow({ user, rank, pts, isMe, ptsAbove }) {
       }`}
     >
       <div className="flex items-center gap-3">
-        <span className={`w-6 text-center font-black flex-shrink-0 ${rank <= 3 ? 'text-lg' : 'text-xs text-muted'}`}>
-          {POSITION_MEDALS[rank] || rank}
-        </span>
+        <div className="flex-shrink-0">
+          <MedalBadge position={rank} size="sm" />
+        </div>
         <Avatar src={user.photo} name={user.full_name} size="sm" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -40,20 +40,22 @@ function RankingRow({ user, rank, pts, isMe, ptsAbove }) {
             </span>
           </div>
           {isMe && rank === 1 && (
-            <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">¡Eres el número 1 del mes! 🔥</p>
+            <p className="text-[10px] text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
+              ¡Eres el número 1 del mes! <Flame size={11} className="text-orange-400" />
+            </p>
           )}
           {isMe && rank > 1 && ptsAbove > 0 && (
             <p className="text-[10px] text-amber-400 font-medium mt-0.5">↑ {ptsAbove} pts para el puesto {rank - 1}</p>
           )}
           {!isMe && (
-            <p className="text-[10px] text-muted font-medium mt-0.5">{user.level || 'Semilla'}</p>
+            <div className="mt-1">
+              <LevelBadge level={user.level || 'Semilla'} size="xs" />
+            </div>
           )}
         </div>
-        <span className={`text-xs font-black ${
-          rank === 1 ? 'text-amber-400' : rank === 2 ? 'text-slate-300' : rank === 3 ? 'text-amber-600' : 'text-accent-light'
-        }`}>
-          {pts} pts
-        </span>
+        <div className="text-right flex-shrink-0">
+          <p className="text-xs font-black text-accent-light">{pts} pts</p>
+        </div>
       </div>
     </div>
   )
@@ -131,33 +133,36 @@ export default function CommunityScreen() {
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
         <button
           onClick={() => setTab('ranking')}
-          className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
             tab === 'ranking' 
               ? 'bg-accent text-white shadow-md shadow-accent/25' 
               : 'bg-card text-muted border border-border hover:text-text-primary'
           }`}
         >
-          🏆 Ranking
+          <Trophy size={14} />
+          <span>Ranking</span>
         </button>
         <button
           onClick={() => setTab('reflexiones')}
-          className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
             tab === 'reflexiones' 
               ? 'bg-accent text-white shadow-md shadow-accent/25' 
               : 'bg-card text-muted border border-border hover:text-text-primary'
           }`}
         >
-          📖 Reflexiones ({reflections.length})
+          <BookOpen size={14} />
+          <span>Reflexiones ({reflections.length})</span>
         </button>
         <button
           onClick={() => setTab('actividad')}
-          className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
             tab === 'actividad' 
               ? 'bg-accent text-white shadow-md shadow-accent/25' 
               : 'bg-card text-muted border border-border hover:text-text-primary'
           }`}
         >
-          ⚡ Actividad
+          <Zap size={14} />
+          <span>Actividad</span>
         </button>
       </div>
 
@@ -197,7 +202,7 @@ export default function CommunityScreen() {
               </div>
             ) : sortedRanking.length === 0 ? (
               <Empty
-                icon="🏆"
+                icon={Trophy}
                 title="Sin datos en el ranking"
                 subtitle="Sé el primero en ganar puntos completando misiones o asistiendo a los servicios."
               />
@@ -226,7 +231,7 @@ export default function CommunityScreen() {
         <div className="space-y-3">
           {reflections.length === 0 ? (
             <Empty
-              icon="📖"
+              icon={BookOpen}
               title="Aún no hay reflexiones públicas hoy"
               subtitle="Ve a Inicio, lee el versículo del día y comparte tu meditación con el grupo."
             />
@@ -261,7 +266,7 @@ export default function CommunityScreen() {
           <Card>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                ✓
+                <CheckCircle2 size={16} />
               </div>
               <div className="flex-1">
                 <p className="text-xs font-bold text-text-primary">Servidores activos este mes</p>
@@ -273,7 +278,7 @@ export default function CommunityScreen() {
           <Card>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-accent-light flex items-center justify-center font-bold">
-                🎮
+                <Gamepad2 size={16} />
               </div>
               <div className="flex-1">
                 <p className="text-xs font-bold text-text-primary">Desafíos Bíblicos Disponibles</p>

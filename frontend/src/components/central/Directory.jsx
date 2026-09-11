@@ -70,7 +70,7 @@ export default function Directory() {
       {loading ? (
         <div className="py-16 text-center text-xs text-muted">Cargando directorio...</div>
       ) : filtered.length === 0 ? (
-        <Empty icon="👥" title="Sin resultados" subtitle="No se encontraron miembros con ese criterio de búsqueda." />
+        <Empty icon={Users} title="Sin resultados" subtitle="No se encontraron miembros con ese criterio de búsqueda." />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filtered.map(u => (

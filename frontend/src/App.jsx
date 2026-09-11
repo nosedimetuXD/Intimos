@@ -18,6 +18,7 @@ import BibleScreen from './pages/BibleScreen'
 import CheckInScreen from './pages/CheckInScreen'
 import DailyChallengeScreen from './pages/DailyChallengeScreen'
 import GamePlayerScreen from './pages/GamePlayerScreen'
+import PulsoDiario from './pages/PulsoDiario'
 
 // Central Screens & Management
 import CentralHome from './pages/CentralHome'
@@ -101,6 +102,7 @@ function AppRoutes() {
       <Route path="/checkin" element={<PrivateRoute><Layout><CheckInScreen /></Layout></PrivateRoute>} />
       <Route path="/retos" element={<PrivateRoute><Layout><DailyChallengeScreen /></Layout></PrivateRoute>} />
       <Route path="/retos/:type" element={<PrivateRoute><Layout><GamePlayerScreen /></Layout></PrivateRoute>} />
+      <Route path="/pulso" element={<PrivateRoute><Layout><PulsoDiario /></Layout></PrivateRoute>} />
 
       {/* ── Central / Team Dashboard ── */}
       <Route path="/central" element={<PrivateRoute requireTeam><Layout><CentralHome /></Layout></PrivateRoute>} />

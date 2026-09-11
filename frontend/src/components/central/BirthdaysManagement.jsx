@@ -41,7 +41,7 @@ export default function BirthdaysManagement() {
         {loading ? (
           <div className="py-12 text-center text-xs text-muted">Cargando cumpleaños...</div>
         ) : membersWithBirthdays.length === 0 ? (
-          <Empty icon="🎂" title="Sin cumpleaños registrados" subtitle="Pide a los jóvenes registrar su fecha en su perfil." />
+          <Empty icon={Gift} title="Sin cumpleaños registrados" subtitle="Pide a los jóvenes registrar su fecha en su perfil." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {membersWithBirthdays.map(u => (

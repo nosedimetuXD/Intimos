@@ -142,12 +142,26 @@ export function ProgressBar({ value, max, label, color = 'accent' }) {
 }
 
 // ── EMPTY STATE ──────────────────────────────────────────────────────────────
-export function Empty({ icon, title, subtitle }) {
+export function Empty({ icon: Icon, title, subtitle }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
-      {icon && <div className="text-3xl mb-2 opacity-60">{icon}</div>}
+      {Icon && (
+        <div className="mb-3 text-muted/60 flex items-center justify-center">
+          {typeof Icon === 'function' ? (
+            <Icon size={38} strokeWidth={1.5} className="text-muted/70" />
+          ) : React.isValidElement(Icon) ? (
+            Icon
+          ) : (
+            <span className="text-3xl opacity-60">{Icon}</span>
+          )}
+        </div>
+      )}
       <p className="text-text-secondary font-semibold text-sm">{title}</p>
       {subtitle && <p className="text-xs text-muted mt-1 max-w-xs">{subtitle}</p>}
     </div>
   )
 }
+
+export { default as LevelBadge, LevelIcon } from './LevelBadge'
+export { default as MedalBadge, MedalIcon } from './MedalBadge'
+

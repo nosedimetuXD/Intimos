@@ -1,0 +1,91 @@
+import {
+  Footprints,
+  MapPin,
+  Sparkles,
+  Landmark,
+  Flame,
+  Zap,
+  Gem,
+  Sunrise,
+  DoorOpen,
+  Calendar,
+  Brain,
+  Target,
+  CheckCircle2,
+  GraduationCap,
+  Scroll,
+  Cross,
+  Swords,
+  Gamepad2,
+  Timer,
+  MessageSquare,
+  Megaphone,
+  UserPlus,
+  HeartHandshake,
+  Heart,
+  Home,
+  Wrench,
+  Crown,
+  Trophy,
+  Medal,
+  Award,
+  Shield,
+  Moon,
+  Clock,
+  Tent,
+  Sprout
+} from 'lucide-react'
+
+export const BADGES = [
+  // ── PRESENCIA Y ASISTENCIA ─────────────────────────────────────────────────
+  { id: 'first_step',    tier: 'normal', icon: Footprints, name: 'Primer Paso',   desc: 'Primera asistencia a un servicio', group: 'Presencia', target: 1 },
+  { id: 'presente',      tier: 'normal', icon: MapPin,     name: 'Presente',      desc: '5 servicios asistidos', group: 'Presencia', target: 5 },
+  { id: 'veteran',       tier: 'normal', icon: Sparkles,   name: 'Veterano',      desc: '10 servicios asistidos', group: 'Presencia', target: 10 },
+  { id: 'pilar',         tier: 'normal', icon: Landmark,   name: 'Pilar',         desc: '25 servicios asistidos', group: 'Presencia', target: 25 },
+  { id: 'streak_3',      tier: 'normal', icon: Flame,      name: 'En Racha',      desc: '3 servicios consecutivos', group: 'Presencia', target: 3 },
+  { id: 'streak_5',      tier: 'normal', icon: Zap,        name: 'Imparable',     desc: '5 servicios consecutivos', group: 'Presencia', target: 5 },
+  { id: 'streak_10',     tier: 'normal', icon: Gem,        name: 'Constancia',    desc: '10 servicios consecutivos', group: 'Presencia', target: 10 },
+  { id: 'comprometido',  tier: 'normal', icon: Sunrise,    name: 'Comprometido',  desc: 'Llegaste temprano a 5 servicios', group: 'Presencia', target: 5 },
+  { id: 'el_primero',    tier: 'normal', icon: DoorOpen,   name: 'El Primero',    desc: 'Primer check-in registrado en un servicio', group: 'Presencia', target: 1 },
+  { id: 'mes_completo',  tier: 'normal', icon: Calendar,   name: 'Mes Completo',  desc: 'Asistencia perfecta a todos los servicios de un mes', group: 'Presencia', target: 1 },
+
+  // ── PALABRA Y ESTUDIO ──────────────────────────────────────────────────────
+  { id: 'reflective',    tier: 'normal', icon: Brain,         name: 'Reflexivo',     desc: '5 reflexiones del versículo enviadas', group: 'Palabra', target: 5 },
+  { id: 'contemplativo', tier: 'normal', icon: Flame,         name: 'Contemplativo', desc: '25 reflexiones enviadas', group: 'Palabra', target: 25 },
+  { id: 'perfect_flash', tier: 'normal', icon: Target,        name: 'Memoria Viva',  desc: 'Verso Flash completado sin errores', group: 'Palabra', target: 1 },
+  { id: 'perfect_vof',   tier: 'normal', icon: CheckCircle2,  name: 'Sin Dudas',     desc: 'Verdadero o Falso perfecto (5/5)', group: 'Palabra', target: 1 },
+  { id: 'erudito',       tier: 'normal', icon: GraduationCap, name: 'Erudito',       desc: '90% de acierto sobre 50 preguntas bíblicas', group: 'Palabra', target: 50 },
+  { id: 'raices',        tier: 'normal', icon: Scroll,        name: 'Raíces',        desc: '30 aciertos sobre el Antiguo Testamento', group: 'Palabra', target: 30 },
+  { id: 'buenas_nuevas', tier: 'normal', icon: Cross,         name: 'Buenas Nuevas', desc: '30 aciertos sobre el Nuevo Testamento', group: 'Palabra', target: 30 },
+
+  // ── JUEGOS Y CONSTANCIA ────────────────────────────────────────────────────
+  { id: 'first_game',    tier: 'normal', icon: Swords,   name: 'Primera Batalla', desc: 'Completaste tu primer juego bíblico', group: 'Juegos', target: 1 },
+  { id: 'dia_completo',  tier: 'normal', icon: Gamepad2, name: 'Día Completo',    desc: 'Todos los desafíos del día completados', group: 'Juegos', target: 1 },
+  { id: 'dc_streak_3',   tier: 'normal', icon: Flame,    name: 'En Llamas',       desc: 'Racha de 3 días jugando retos', group: 'Juegos', target: 3 },
+  { id: 'dc_streak_7',   tier: 'normal', icon: Sparkles, name: 'Fiel',            desc: 'Racha de 7 días jugando retos', group: 'Juegos', target: 7 },
+  { id: 'dc_streak_14',  tier: 'normal', icon: Calendar, name: 'Constante',       desc: 'Racha de 14 días jugando retos', group: 'Juegos', target: 14 },
+  { id: 'dc_streak_30',  tier: 'normal', icon: Gem,      name: 'Inquebrantable',  desc: 'Racha de 30 días jugando retos', group: 'Juegos', target: 30 },
+  { id: 'reto_velocista',tier: 'normal', icon: Timer,    name: 'Velocista',       desc: '10+ aciertos en Reto 60 segundos', group: 'Juegos', target: 10 },
+
+  // ── COMUNIDAD Y ALCANCE ────────────────────────────────────────────────────
+  { id: 'voice',         tier: 'normal', icon: MessageSquare,  name: 'Mi Voz',          desc: 'Enviaste tu primera sugerencia en Mi Voz', group: 'Comunidad', target: 1 },
+  { id: 'escuchado',     tier: 'normal', icon: Megaphone,      name: 'Escuchado',       desc: 'Tu sugerencia fue implementada por el equipo', group: 'Comunidad', target: 1 },
+  { id: 'uno_mas',       tier: 'normal', icon: UserPlus,       name: '#UnoMás',         desc: 'Invitaste a un amigo que asistió al servicio', group: 'Comunidad', target: 1 },
+  { id: 'puente',        tier: 'normal', icon: HeartHandshake, name: 'Puente',          desc: 'Invitaste a 3 personas que asistieron', group: 'Comunidad', target: 3 },
+  { id: 'pareja_7',      tier: 'normal', icon: Heart,          name: 'Pareja Fiel',     desc: 'Racha de oración en dúo de 7 días', group: 'Comunidad', target: 7 },
+  { id: 'familia',       tier: 'normal', icon: Home,           name: 'Familia',         desc: '3 meses activo en el grupo', group: 'Comunidad', target: 3 },
+
+  // ── SERVICIO Y LIDERAZGO ───────────────────────────────────────────────────
+  { id: 'manos_obra',    tier: 'normal', icon: Wrench,   name: 'Manos a la Obra', desc: 'Participación en servicio o logística', group: 'Servicio', target: 1 },
+  { id: 'campista_2026', tier: 'normal', icon: Tent,     name: 'Campista 2026',   desc: 'Inscripción y abono completado al campamento', group: 'Servicio', target: 1 },
+  { id: 'top3',          tier: 'normal', icon: Trophy,   name: 'Top del Mes',     desc: 'Entraste al Top 3 mensual del ranking', group: 'Servicio', target: 1 },
+  { id: 'campeon',       tier: 'normal', icon: Crown,    name: 'Campeón',         desc: 'Conquistaste el 1er lugar del mes', group: 'Servicio', target: 1 },
+
+  // ── EXCLUSIVOS ─────────────────────────────────────────────────────────────
+  { id: 'centinela',     tier: 'exclusivo', icon: Flame,        name: 'Centinela',            desc: 'Racha de 100 días activo en la plataforma', group: 'Exclusivo', target: 100 },
+  { id: 'el_fiel',       tier: 'exclusivo', icon: Gem,          name: 'El Fiel',              desc: 'Asistencia a todos los servicios de un trimestre', group: 'Exclusivo', target: 12 },
+  { id: 'corazon_david', tier: 'exclusivo', icon: Heart,        name: 'Corazón de David',     desc: '100 reflexiones bíblicas enviadas', group: 'Exclusivo', target: 100 },
+  { id: 'salomon',       tier: 'exclusivo', icon: GraduationCap,name: 'Sabiduría de Salomón', desc: '95% de acierto sobre 200 preguntas bíblicas', group: 'Exclusivo', target: 200 },
+  { id: 'bicampeon',     tier: 'exclusivo', icon: Trophy,       name: 'Bicampeón',            desc: 'Ganaste el 1er lugar del ranking dos meses', group: 'Exclusivo', target: 2 },
+  { id: 'inquebrantable',tier: 'exclusivo', icon: Shield,       name: 'Defensor de la Fe',    desc: 'Un mes completo sin fallar ningún desafío', group: 'Exclusivo', target: 30 },
+]

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { CheckSquare, Calendar, Clock, Sparkles, Trash2, UserPlus, Search } from 'lucide-react'
+import { CheckSquare, Calendar, Clock, Sparkles, Trash2, UserPlus, Search, RotateCcw } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { servicesApi, centralApi } from '../../api'
@@ -35,13 +35,13 @@ export default function AttendanceManagement() {
       .catch(() => setAttendances([]))
   }, [selectedServiceId])
 
-  const handleDelete = async (attId) => {
-    if (!confirm('¿Eliminar esta asistencia? Se revertirán los puntos.')) return
+  const handleDelete = async (attId, userName = 'este asistente') => {
+    if (!confirm(`¿Deshacer el check-in de ${userName}? Se revertirá la asistencia y los puntos otorgados.`)) return
     try {
       await servicesApi.deleteAttendance(selectedServiceId, attId)
       setAttendances(prev => prev.filter(a => a.id !== attId))
     } catch (err) {
-      alert(err.message || 'Error al eliminar')
+      alert(err.message || 'Error al revertir asistencia')
     }
   }
 
@@ -142,11 +142,12 @@ export default function AttendanceManagement() {
                   </p>
                 </div>
                 <button
-                  onClick={() => handleDelete(a.id)}
-                  className="p-1.5 rounded-lg text-muted hover:text-rose-400 transition-colors"
-                  title="Eliminar asistencia"
+                  onClick={() => handleDelete(a.id, a.user_name)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 transition-all text-xs font-semibold"
+                  title="Deshacer check-in y revertir puntos"
                 >
-                  <Trash2 size={15} />
+                  <RotateCcw size={13} />
+                  <span>Deshacer</span>
                 </button>
               </div>
             ))

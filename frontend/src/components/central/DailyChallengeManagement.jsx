@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Swords, CheckCircle2, BarChart2, Zap, Settings } from 'lucide-react'
+import { Swords, CheckCircle2, BarChart2, Zap, Settings, BookOpen, HelpCircle, Timer } from 'lucide-react'
 import { Card, Btn } from '../ui'
 
 const GAMES = [
-  { id: 'verso_flash', name: 'Verso Flash', icon: '📖', desc: 'Identifica citas y libros', defaultActive: true },
-  { id: 'que_harias', name: '¿Qué Harías?', icon: '🤔', desc: 'Decisiones basadas en Jesús', defaultActive: true },
-  { id: 'reto_60', name: 'Reto 60 seg', icon: '⚡', desc: 'Velocidad y conocimiento', defaultActive: true },
-  { id: 'verdadero_falso', name: 'Verdadero o Falso', icon: '✅', desc: 'Mitos y verdades bíblicas', defaultActive: true },
+  { id: 'verso_flash', name: 'Verso Flash', icon: BookOpen, color: 'text-blue-400', desc: 'Identifica citas y libros', defaultActive: true },
+  { id: 'que_harias', name: '¿Qué Harías?', icon: HelpCircle, color: 'text-amber-400', desc: 'Decisiones basadas en Jesús', defaultActive: true },
+  { id: 'reto_60', name: 'Reto 60 seg', icon: Timer, color: 'text-orange-400', desc: 'Velocidad y conocimiento', defaultActive: true },
+  { id: 'verdadero_falso', name: 'Verdadero o Falso', icon: CheckCircle2, color: 'text-emerald-400', desc: 'Mitos y verdades bíblicas', defaultActive: true },
 ]
 
 export default function DailyChallengeManagement() {
@@ -63,7 +63,9 @@ export default function DailyChallengeManagement() {
             return (
               <div key={g.id} className="flex items-center justify-between p-3 rounded-xl bg-card2 border border-border">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{g.icon}</span>
+                  <div className={`p-2 rounded-xl bg-card border border-border ${g.color}`}>
+                    <g.icon size={20} />
+                  </div>
                   <div>
                     <h3 className="font-bold text-xs text-text-primary">{g.name}</h3>
                     <p className="text-[11px] text-muted">{g.desc}</p>

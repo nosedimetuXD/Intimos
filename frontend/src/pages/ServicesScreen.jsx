@@ -142,7 +142,7 @@ export default function ServicesScreen() {
       {loading ? (
         <div className="py-12 text-center text-xs text-muted">Cargando servicios...</div>
       ) : sorted.length === 0 ? (
-        <Empty icon="📅" title="No hay servicios" subtitle="Pronto aparecerán aquí los próximos servicios del grupo." />
+        <Empty icon={Calendar} title="No hay servicios" subtitle="Pronto aparecerán aquí los próximos servicios del grupo." />
       ) : (
         <div className="space-y-2.5">
           {sorted.map(svc => (

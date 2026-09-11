@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Zap, Plus, CheckCircle2, Trash2, Calendar } from 'lucide-react'
+import { Zap, Plus, CheckCircle2, Trash2, Calendar, Lightbulb } from 'lucide-react'
 import { Card, Btn, Modal } from '../ui'
+import { CHALLENGE_IDEAS } from '../../data/challengeIdeas'
+
 
 const INITIAL_CHALLENGES = [
   {
@@ -109,6 +111,32 @@ export default function ChallengesManagement() {
       {/* Modal Nuevo Reto */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Crear Reto Semanal">
         <form onSubmit={handleAdd} className="p-4 space-y-3">
+          {/* Ideas Bank Selector */}
+          <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 space-y-1.5">
+            <label className="text-[11px] font-bold text-accent-light flex items-center gap-1">
+              <Lightbulb size={13} />
+              <span>Cargar idea del banco (opcional):</span>
+            </label>
+            <select
+              onChange={e => {
+                const idea = CHALLENGE_IDEAS.find(i => i.title === e.target.value)
+                if (idea) {
+                  setTitle(idea.title)
+                  setDescription(idea.description)
+                  setPoints(idea.points || 100)
+                }
+              }}
+              className="w-full text-xs p-2 rounded-lg bg-card border border-border text-text-primary"
+            >
+              <option value="">Selecciona una idea sugerida...</option>
+              {CHALLENGE_IDEAS.map(idea => (
+                <option key={idea.title} value={idea.title}>
+                  [{idea.category}] {idea.title} (+{idea.points} pts)
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="space-y-1">
             <label className="text-xs font-semibold text-text-secondary">Título del reto</label>
             <input

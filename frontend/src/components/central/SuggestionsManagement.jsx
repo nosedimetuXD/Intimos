@@ -61,7 +61,7 @@ export default function SuggestionsManagement() {
       </div>
 
       {filtered.length === 0 ? (
-        <Empty icon="💬" title="No hay sugerencias en esta categoría" subtitle="Cuando los miembros envíen ideas aparecerán aquí." />
+        <Empty icon={MessageSquare} title="No hay sugerencias en esta categoría" subtitle="Cuando los miembros envíen ideas aparecerán aquí." />
       ) : (
         <div className="space-y-3">
           {filtered.map(sug => (

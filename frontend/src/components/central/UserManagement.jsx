@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { UserCog, Search, Shield, CheckCircle2 } from 'lucide-react'
+import { UserCog, Search, Shield, CheckCircle2, User } from 'lucide-react'
 import { centralApi } from '../../api'
 import { Card, Avatar, Empty } from '../ui'
 
@@ -79,7 +79,7 @@ export default function UserManagement() {
       {loading ? (
         <div className="py-16 text-center text-xs text-muted">Cargando usuarios...</div>
       ) : filtered.length === 0 ? (
-        <Empty icon="👤" title="No se encontraron usuarios" subtitle="Verifica el término de búsqueda." />
+        <Empty icon={User} title="No se encontraron usuarios" subtitle="Verifica el término de búsqueda." />
       ) : (
         <div className="space-y-2.5">
           {filtered.map(u => (

@@ -17,11 +17,14 @@ import {
   ChevronRight,
   Gift,
   Clock,
-  Users
+  Users,
+  MessageSquare,
+  CheckCircle2,
+  Lock
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Card, Btn, Avatar, Modal } from '../components/ui'
+import { Card, Btn, Avatar, Modal, MedalBadge, MedalIcon, LevelBadge } from '../components/ui'
 
 const DAILY_VERSES = [
   { verse: "Todo lo puedo en Cristo que me fortalece.", reference: "Filipenses 4:13" },
@@ -107,7 +110,7 @@ export default function HomeScreen() {
     setHasReflectedToday(true)
     setShowReflection(false)
     setReflectionText('')
-    setToastMsg('¡Reflexión enviada! +25 pts de meditación 🎉')
+    setToastMsg('¡Reflexión enviada! +25 pts de meditación')
     setTimeout(() => setToastMsg(null), 3500)
     refreshProfile()
   }
@@ -118,7 +121,7 @@ export default function HomeScreen() {
   const myPts = ranking.find(u => u.user_id === currentUser?.id)?.month_points ?? 0
   const ptsToNext = aboveUser ? Math.max(0, aboveUser.month_points - myPts) : 0
   const top3 = ranking.slice(0, 3)
-  const medals = ['🥇', '🥈', '🥉']
+
 
   const firstName = currentUser?.full_name?.split(' ')[0] || 'Miembro'
 
@@ -146,13 +149,33 @@ export default function HomeScreen() {
           </h1>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border border-accent/30 bg-accent/15 text-accent-light">
-            {level}
-          </span>
+          <LevelBadge level={level} size="sm" />
           <span className="text-[11px] font-semibold text-orange-400 flex items-center gap-1">
             <Flame size={12} /> Activo
           </span>
         </div>
+      </div>
+
+      {/* Pulso Diario Banner */}
+      <div
+        onClick={() => navigate('/pulso')}
+        className="p-3.5 rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/15 via-card to-card hover:border-accent/50 cursor-pointer transition-all active:scale-[0.99] flex items-center justify-between shadow-sm"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 flex-shrink-0">
+            <Flame size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-black text-text-primary">Pulso Diario</h3>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                +20 pts
+              </span>
+            </div>
+            <p className="text-[11px] text-muted">Tus 3 metas espirituales de hoy: versículo, trivia y oración</p>
+          </div>
+        </div>
+        <ChevronRight size={16} className="text-muted flex-shrink-0" />
       </div>
 
       {/* Daily Verse Card */}
@@ -372,8 +395,10 @@ export default function HomeScreen() {
         )}
 
         {myRank > 0 && myRank <= 3 && (
-          <div className="mb-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-center">
-            <span className="text-emerald-400 font-bold">¡Estás en el top {myRank}! {medals[myRank - 1]} ¡Sigue así! 🔥</span>
+          <div className="mb-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-center flex items-center justify-center gap-2">
+            <MedalIcon position={myRank} size={16} />
+            <span className="text-emerald-400 font-bold">¡Estás en el top {myRank}! ¡Sigue así!</span>
+            <Flame size={14} className="text-orange-400" />
           </div>
         )}
 
@@ -390,7 +415,7 @@ export default function HomeScreen() {
                     isMe ? 'bg-accent/15 border border-accent/30' : 'bg-card2/50'
                   }`}
                 >
-                  <span className="text-xl w-6 text-center">{medals[i]}</span>
+                  <MedalBadge position={i + 1} size="sm" />
                   <Avatar name={u.full_name} size="sm" />
                   <span className={`flex-1 text-xs truncate ${isMe ? 'font-bold text-accent-light' : 'font-medium text-text-primary'}`}>
                     {u.full_name} {isMe ? '← tú' : ''}
@@ -460,7 +485,7 @@ export default function HomeScreen() {
                 }`}
               >
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-xs">🔒</span>
+                  <Lock size={14} className="text-muted" />
                   <span className="text-xs font-bold">Privada</span>
                 </div>
                 <p className="text-[10px] opacity-75">Solo para tu devocional personal</p>

@@ -38,16 +38,8 @@ import {
   Smartphone,
   Share
 } from 'lucide-react'
-import { Avatar } from '../ui'
+import { Avatar, LevelBadge, LevelIcon } from '../ui'
 
-const LEVEL_EMOJIS = {
-  'Semilla': '🌱',
-  'Buscador': '🔍',
-  'Discípulo': '🌿',
-  'Guerrero': '⚔️',
-  'Pilar': '🏛️',
-  'Líder': '👑'
-}
 
 // ── Public Navigation (App) ──
 const publicNav = [
@@ -152,8 +144,6 @@ export default function Layout({ children }) {
         ? 'bg-accent/20 text-accent-light'
         : 'text-muted hover:text-text-primary hover:bg-white/5'
     } ${collapsed ? 'justify-center px-2' : ''}`
-
-  const levelEmoji = LEVEL_EMOJIS[level] || '🌱'
 
   return (
     <div className="flex h-dvh bg-bg overflow-hidden text-text-primary">

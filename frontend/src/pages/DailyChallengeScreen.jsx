@@ -13,18 +13,13 @@ import {
   Timer,
   CheckSquare,
   CaseUpper,
-  AlignLeft
+  AlignLeft,
+  BookOpen,
+  CheckCircle2,
+  Type,
+  Shuffle
 } from 'lucide-react'
-import { Card, ProgressBar } from '../components/ui'
-
-const LEVEL_EMOJIS = {
-  'Semilla': '🌱',
-  'Buscador': '🔍',
-  'Discípulo': '🌿',
-  'Guerrero': '⚔️',
-  'Pilar': '🏛️',
-  'Líder': '👑'
-}
+import { Card, ProgressBar, LevelIcon, LevelBadge } from '../components/ui'
 
 const LEVEL_THRESHOLDS = [
   { name: 'Semilla', min: 0, max: 200 },
@@ -56,7 +51,8 @@ export default function DailyChallengeScreen() {
     {
       id: 'verso_flash',
       name: 'Verso Flash',
-      icon: '📖',
+      icon: BookOpen,
+      iconColor: 'text-blue-400',
       desc: 'Identifica citas y libros en preguntas rápidas.',
       path: '/retos/verso_flash',
       color: 'from-blue-500/20 to-blue-600/5',
@@ -66,7 +62,8 @@ export default function DailyChallengeScreen() {
     {
       id: 'que_harias',
       name: '¿Qué Harías?',
-      icon: '🤔',
+      icon: HelpCircle,
+      iconColor: 'text-amber-400',
       desc: 'Decisiones basadas en enseñanzas de Jesús.',
       path: '/retos/que_harias',
       color: 'from-amber-500/20 to-amber-600/5',
@@ -76,7 +73,8 @@ export default function DailyChallengeScreen() {
     {
       id: 'reto_60',
       name: 'Reto 60 seg',
-      icon: '⚡',
+      icon: Timer,
+      iconColor: 'text-orange-400',
       desc: '60 segundos para responder la mayor cantidad posible.',
       path: '/retos/reto_60',
       color: 'from-orange-500/20 to-orange-600/5',
@@ -86,7 +84,8 @@ export default function DailyChallengeScreen() {
     {
       id: 'verdadero_falso',
       name: 'Verdadero o Falso',
-      icon: '✅',
+      icon: CheckCircle2,
+      iconColor: 'text-emerald-400',
       desc: 'Mitos y verdades con explicación detallada.',
       path: '/retos/verdadero_falso',
       color: 'from-emerald-500/20 to-emerald-600/5',
@@ -99,7 +98,8 @@ export default function DailyChallengeScreen() {
     {
       id: 'ahorcado',
       name: 'Ahorcado Bíblico',
-      icon: '🔤',
+      icon: Type,
+      iconColor: 'text-purple-400',
       path: '/retos/ahorcado',
       color: 'from-purple-500/15 to-purple-600/5',
       border: 'border-purple-500/20',
@@ -108,7 +108,8 @@ export default function DailyChallengeScreen() {
     {
       id: 'ordena_verso',
       name: 'Ordena el Versículo',
-      icon: '🔀',
+      icon: Shuffle,
+      iconColor: 'text-cyan-400',
       path: '/retos/ordena_verso',
       color: 'from-cyan-500/15 to-cyan-600/5',
       border: 'border-cyan-500/20',
@@ -139,7 +140,9 @@ export default function DailyChallengeScreen() {
       <Card>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5">
-            <span className="text-2xl">{LEVEL_EMOJIS[level] || '🌱'}</span>
+            <div className="w-10 h-10 rounded-xl bg-card2 border border-border flex items-center justify-center flex-shrink-0">
+              <LevelIcon level={level} size={22} />
+            </div>
             <div>
               <p className="text-sm font-black text-text-primary">{level}</p>
               <p className="text-[11px] text-muted">
@@ -190,8 +193,8 @@ export default function DailyChallengeScreen() {
                   <p className="text-xs text-muted">{completedCount}/{activeGames.length} completados hoy</p>
                 </div>
                 {completedCount === activeGames.length && (
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/25">
-                    ¡Completado! 🎉
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/25 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> ¡Completado!
                   </span>
                 )}
               </div>
@@ -200,6 +203,7 @@ export default function DailyChallengeScreen() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {activeGames.map((game) => {
                   const done = checkGameCompleted(game.id)
+                  const IconComp = game.icon
                   return (
                     <button
                       key={game.id}
@@ -207,7 +211,9 @@ export default function DailyChallengeScreen() {
                       className={`p-3.5 rounded-2xl border bg-gradient-to-br text-left transition-all hover:scale-[1.01] active:scale-[0.98] ${game.color} ${game.border}`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">{game.icon}</span>
+                        <div className={`p-2 rounded-xl bg-black/20 ${game.iconColor}`}>
+                          <IconComp size={20} />
+                        </div>
                         {done ? (
                           <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/25">
                             <CheckCircle size={10} /> +{game.pts}
@@ -235,21 +241,26 @@ export default function DailyChallengeScreen() {
           Repertorio de Juegos
         </p>
         <div className="grid grid-cols-2 gap-2.5">
-          {repertorioGames.map((game) => (
-            <button
-              key={game.id}
-              onClick={() => navigate(game.path)}
-              className={`p-3.5 rounded-2xl border bg-gradient-to-br text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${game.color} ${game.border}`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-2xl">{game.icon}</span>
-                <span className="text-[10px] font-bold text-text-secondary bg-card/80 px-2 py-0.5 rounded-full border border-border">
-                  {game.badge}
-                </span>
-              </div>
-              <p className="font-bold text-text-primary text-xs">{game.name}</p>
-            </button>
-          ))}
+          {repertorioGames.map((game) => {
+            const IconComp = game.icon
+            return (
+              <button
+                key={game.id}
+                onClick={() => navigate(game.path)}
+                className={`p-3.5 rounded-2xl border bg-gradient-to-br text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${game.color} ${game.border}`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className={`p-2 rounded-xl bg-black/20 ${game.iconColor}`}>
+                    <IconComp size={20} />
+                  </div>
+                  <span className="text-[10px] font-bold text-text-secondary bg-card/80 px-2 py-0.5 rounded-full border border-border">
+                    {game.badge}
+                  </span>
+                </div>
+                <p className="font-bold text-text-primary text-xs">{game.name}</p>
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>

@@ -57,7 +57,7 @@ export default function ReflectionsReview() {
       </div>
 
       {filtered.length === 0 ? (
-        <Empty icon="📖" title="Sin reflexiones para revisar" subtitle="Cuando los miembros mediten en el versículo del día aparecerán aquí." />
+        <Empty icon={BookOpen} title="Sin reflexiones para revisar" subtitle="Cuando los miembros mediten en el versículo del día aparecerán aquí." />
       ) : (
         <div className="space-y-3">
           {filtered.map((ref, idx) => (
