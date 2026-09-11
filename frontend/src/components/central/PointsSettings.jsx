@@ -11,13 +11,16 @@ export default function PointsSettings() {
     postServicio: 50,
     registro: 50,
     dailyCap: 200,
+    monthlyCap: 2500,
   })
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('intimos_points_settings') || '{}')
-      if (stored.asistencia) setCfg(stored)
+      if (stored.asistencia) {
+        setCfg(prev => ({ ...prev, ...stored }))
+      }
     } catch {}
   }, [])
 
@@ -97,11 +100,30 @@ export default function PointsSettings() {
               />
             </div>
             <div className="space-y-1">
+              <label className="text-xs font-semibold text-text-secondary">Bono por nuevo registro</label>
+              <input
+                type="number"
+                value={cfg.registro}
+                onChange={e => setCfg(c => ({ ...c, registro: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
               <label className="text-xs font-semibold text-text-secondary">Tope diario en juegos</label>
               <input
                 type="number"
                 value={cfg.dailyCap}
                 onChange={e => setCfg(c => ({ ...c, dailyCap: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-text-secondary">Tope mensual en juegos</label>
+              <input
+                type="number"
+                value={cfg.monthlyCap}
+                onChange={e => setCfg(c => ({ ...c, monthlyCap: parseInt(e.target.value) || 0 }))}
               />
             </div>
           </div>

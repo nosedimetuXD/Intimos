@@ -143,17 +143,21 @@ export function ProgressBar({ value, max, label, color = 'accent' }) {
 
 // ── EMPTY STATE ──────────────────────────────────────────────────────────────
 export function Empty({ icon: Icon, title, subtitle }) {
+  const renderIcon = () => {
+    if (!Icon) return null
+    if (React.isValidElement(Icon)) return Icon
+    if (typeof Icon === 'string') {
+      return <span className="text-3xl opacity-60">{Icon}</span>
+    }
+    const Comp = Icon
+    return <Comp size={38} strokeWidth={1.5} className="text-muted/70" />
+  }
+
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
       {Icon && (
         <div className="mb-3 text-muted/60 flex items-center justify-center">
-          {typeof Icon === 'function' ? (
-            <Icon size={38} strokeWidth={1.5} className="text-muted/70" />
-          ) : React.isValidElement(Icon) ? (
-            Icon
-          ) : (
-            <span className="text-3xl opacity-60">{Icon}</span>
-          )}
+          {renderIcon()}
         </div>
       )}
       <p className="text-text-secondary font-semibold text-sm">{title}</p>
