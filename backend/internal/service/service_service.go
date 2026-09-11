@@ -148,5 +148,46 @@ func (s *ServiceService) ListAttendanceByService(ctx context.Context, serviceID 
 }
 
 func (s *ServiceService) DeleteAttendance(ctx context.Context, attendanceID string) error {
+	att, err := s.attendanceRepo.GetByID(ctx, attendanceID)
+	if err != nil {
+		return err
+	}
+	if att == nil {
+		return errors.New("registro de asistencia no encontrado")
+	}
+
+	// 1. Rollback attendee points
+	deductPoints := 300
+	serviceTitle := att.ServiceTitle
+	if serviceTitle == "" {
+		serviceTitle = "Servicio"
+	}
+	reason := fmt.Sprintf("Rollback: Deshacer asistencia a %s", serviceTitle)
+	if att.IsEarly {
+		deductPoints = 375
+		reason = fmt.Sprintf("Rollback: Deshacer asistencia puntual a %s", serviceTitle)
+	}
+
+	_ = s.pointsRepo.Add(ctx, &domain.PointsLedger{
+		UserID:    att.UserID,
+		Points:    -deductPoints,
+		Reason:    reason,
+		Category:  domain.CategoryAttendance,
+		ServiceID: &att.ServiceID,
+	})
+
+	// 2. Rollback godfather/inviter bonus points if applicable
+	u, _ := s.userRepo.GetByID(ctx, att.UserID)
+	if u != nil && u.InvitedByID != nil {
+		_ = s.pointsRepo.Add(ctx, &domain.PointsLedger{
+			UserID:    *u.InvitedByID,
+			Points:    -100,
+			Reason:    fmt.Sprintf("Rollback: Deshacer asistencia de invitado %s", u.FullName),
+			Category:  domain.CategoryInvite,
+			ServiceID: &att.ServiceID,
+		})
+	}
+
+	// 3. Delete attendance record
 	return s.attendanceRepo.Delete(ctx, attendanceID)
 }

@@ -44,12 +44,19 @@ func main() {
 	pointsRepo := postgres.NewPointsRepository(pool)
 	gameRepo := postgres.NewGameRepository(pool)
 	centralRepo := postgres.NewCentralRepository(pool)
+	pulseRepo := postgres.NewPulseRepository(pool)
+	badgeRepo := postgres.NewBadgeRepository(pool)
 
 	// Services
 	authService := service.NewAuthService(userRepo, pointsRepo, cfg.JWTSecret)
 	serviceService := service.NewServiceService(serviceRepo, attendanceRepo, pointsRepo, userRepo)
 	pointsService := service.NewPointsService(pointsRepo)
 	gameService := service.NewGameService(gameRepo, pointsService)
+	pulseService := service.NewPulseService(pulseRepo, pointsRepo, pointsService)
+	badgeService := service.NewBadgeService(badgeRepo)
+
+	// Pre-seed badges catalog
+	_ = badgeService.SeedBadges(ctx)
 
 	// Handlers
 	authHandler := httphandler.NewAuthHandler(authService)
@@ -57,6 +64,8 @@ func main() {
 	pointsHandler := httphandler.NewPointsHandler(pointsService)
 	gameHandler := httphandler.NewGameHandler(gameService)
 	centralHandler := httphandler.NewCentralHandler(userRepo, centralRepo)
+	pulseHandler := httphandler.NewPulseHandler(pulseService)
+	badgeHandler := httphandler.NewBadgeHandler(badgeService)
 
 	router := httphandler.NewRouter(httphandler.RouterConfig{
 		AuthHandler:    authHandler,
@@ -64,6 +73,8 @@ func main() {
 		PointsHandler:  pointsHandler,
 		GameHandler:    gameHandler,
 		CentralHandler: centralHandler,
+		PulseHandler:   pulseHandler,
+		BadgeHandler:   badgeHandler,
 		JWTSecret:      cfg.JWTSecret,
 		CORSOrigins:    cfg.CORSOrigins,
 	})

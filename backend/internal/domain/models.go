@@ -77,6 +77,7 @@ const (
 	CategoryReflection PointsCategory = "reflection"
 	CategoryManual     PointsCategory = "manual"
 	CategoryBonus      PointsCategory = "bonus"
+	CategoryPulse      PointsCategory = "pulse"
 )
 
 type PointsLedger struct {
@@ -216,3 +217,26 @@ type Announcement struct {
 	ExpiresAt *time.Time`json:"expires_at,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type DailyPulse struct {
+	ID             string    `json:"id"`
+	UserID         string    `json:"user_id"`
+	PulseDate      time.Time `json:"pulse_date"`
+	ReflectionDone bool      `json:"reflection_done"`
+	TriviaDone     bool      `json:"trivia_done"`
+	TriviaCorrect  bool      `json:"trivia_correct"`
+	TriviaSelected *int      `json:"trivia_selected,omitempty"`
+	PrayerDone     bool      `json:"prayer_done"`
+	PrayerText     string    `json:"prayer_text"`
+	PointsAwarded  int       `json:"points_awarded"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type DailyPulseStatus struct {
+	Pulse          *DailyPulse `json:"pulse"`
+	Streak         int         `json:"streak"`
+	CompletedCount int         `json:"completed_count"`
+	PointsToday    int         `json:"points_today"`
+}
+

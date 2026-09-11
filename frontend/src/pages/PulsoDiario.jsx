@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Card, Btn } from '../components/ui'
 import confetti from 'canvas-confetti'
+import { pulseApi } from '../api'
 
 const TRIVIA_POOL = [
   { q: '¿Quién fue tragado por un gran pez?', opts: ['Elías', 'Jonás', 'Moisés', 'Daniel'], ans: 1 },
@@ -62,10 +63,42 @@ export default function PulsoDiario() {
   const [prayerText, setPrayerText] = useState('')
   const [prayerDone, setPrayerDone] = useState(pulse.prayer || false)
   const [reflectionDone, setReflectionDone] = useState(pulse.reflection || false)
+  const [streak, setStreak] = useState(1)
 
   const trivia = getTodayTrivia()
   const dayIdx = new Date().getDay()
   const bg = GRADIENTS[dayIdx]
+
+  useEffect(() => {
+    let mounted = true
+    async function loadBackend() {
+      try {
+        const res = await pulseApi.getToday()
+        if (mounted && res && res.pulse) {
+          const p = res.pulse
+          if (p.reflection_done) setReflectionDone(true)
+          if (p.prayer_done) setPrayerDone(true)
+          if (res.streak) setStreak(res.streak)
+          if (p.trivia_done) {
+            setTriviaSelected(p.trivia_selected)
+            setPulse(prev => ({
+              ...prev,
+              triviaAnswered: true,
+              triviaCorrect: p.trivia_correct,
+              triviaSelected: p.trivia_selected,
+              prayer: p.prayer_done,
+              prayerText: p.prayer_text,
+              reflection: p.reflection_done,
+            }))
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully to localStorage
+      }
+    }
+    loadBackend()
+    return () => { mounted = false }
+  }, [currentUser?.id])
 
   function save(updates) {
     const next = { ...pulse, ...updates }
@@ -73,7 +106,7 @@ export default function PulsoDiario() {
     localStorage.setItem(storageKey, JSON.stringify(next))
   }
 
-  function handleTrivia(idx) {
+  async function handleTrivia(idx) {
     if (pulse.triviaAnswered) return
     setTriviaSelected(idx)
     const isCorrect = idx === trivia.ans
@@ -82,24 +115,49 @@ export default function PulsoDiario() {
     if (isCorrect) {
       confetti({ particleCount: 30, spread: 50 })
     }
+
+    try {
+      const res = await pulseApi.submitTrivia(idx, isCorrect)
+      if (res?.streak) setStreak(res.streak)
+    } catch (e) {
+      // offline fallback
+    }
+
     if (refreshProfile) refreshProfile()
   }
 
-  function handlePrayerSubmit(e) {
+  async function handlePrayerSubmit(e) {
     e.preventDefault()
-    if (!prayerText.trim() || prayerDone) return
+    const text = prayerText.trim()
+    if (!text || prayerDone) return
 
-    save({ prayer: true, prayerText: prayerText.trim() })
+    save({ prayer: true, prayerText: text })
     setPrayerDone(true)
     setPrayerText('')
     confetti({ particleCount: 30, spread: 45 })
+
+    try {
+      const res = await pulseApi.recordPrayer(text)
+      if (res?.streak) setStreak(res.streak)
+    } catch (e) {
+      // offline fallback
+    }
+
     if (refreshProfile) refreshProfile()
   }
 
-  function handleMarkReflection() {
+  async function handleMarkReflection() {
     save({ reflection: true })
     setReflectionDone(true)
     confetti({ particleCount: 20, spread: 40 })
+
+    try {
+      const res = await pulseApi.completeReflection()
+      if (res?.streak) setStreak(res.streak)
+    } catch (e) {
+      // offline fallback
+    }
+
     if (refreshProfile) refreshProfile()
   }
 
@@ -159,7 +217,7 @@ export default function PulsoDiario() {
           <div className="flex items-center justify-center gap-6 pt-3">
             <div className="text-center">
               <p className="text-2xl font-black text-orange-400 flex items-center justify-center gap-1">
-                <Flame size={20} /> 1
+                <Flame size={20} /> {streak}
               </p>
               <p className="text-[10px] text-white/60 font-medium mt-0.5">racha activa</p>
             </div>

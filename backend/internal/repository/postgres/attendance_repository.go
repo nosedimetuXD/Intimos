@@ -106,8 +106,31 @@ func (r *AttendanceRepository) ListByUser(ctx context.Context, userID string) ([
 	return list, nil
 }
 
+func (r *AttendanceRepository) GetByID(ctx context.Context, id string) (*domain.Attendance, error) {
+	query := `
+		SELECT a.id, a.service_id, a.user_id, a.check_in_time, a.is_early, a.checked_in_by, a.notes, a.created_at,
+		       s.title
+		FROM attendances a
+		JOIN services s ON a.service_id = s.id
+		WHERE a.id = $1
+	`
+	var a domain.Attendance
+	err := r.pool.QueryRow(ctx, query, id).Scan(
+		&a.ID, &a.ServiceID, &a.UserID, &a.CheckInTime, &a.IsEarly, &a.CheckedInBy, &a.Notes, &a.CreatedAt,
+		&a.ServiceTitle,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &a, nil
+}
+
 func (r *AttendanceRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM attendances WHERE id = $1`
 	_, err := r.pool.Exec(ctx, query, id)
 	return err
 }
+

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { pointsApi } from '../api'
+import { pointsApi, badgesApi } from '../api'
 import { 
   User, 
   Sparkles, 
@@ -33,13 +33,32 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('Todas')
   const [selectedBadge, setSelectedBadge] = useState(null)
+  const [backendBadges, setBackendBadges] = useState(null)
 
   useEffect(() => {
     pointsApi.getHistory(30)
       .then(res => setHistory(res || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false))
-  }, [])
+
+    badgesApi.getMyProgress()
+      .then(res => {
+        if (Array.isArray(res) && res.length > 0) {
+          const map = {}
+          res.forEach(item => {
+            map[item.slug] = {
+              current: item.current,
+              target: item.target,
+              done: item.unlocked,
+              pct: item.target > 0 ? Math.min(100, Math.round((item.current / item.target) * 100)) : 0,
+              unlockedAt: item.unlocked_at
+            }
+          })
+          setBackendBadges(map)
+        }
+      })
+      .catch(() => {})
+  }, [currentUser?.id])
 
   // Evaluate badge progress
   const evaluated = useMemo(() => {
@@ -53,7 +72,7 @@ export default function ProfileScreen() {
       suggestions = JSON.parse(localStorage.getItem(`intimos_voice_${currentUser?.id}`) || '[]')
     } catch {}
 
-    return evaluateBadges(currentUser, {
+    const local = evaluateBadges(currentUser, {
       attendance: [],
       services: [],
       reflections,
@@ -61,7 +80,23 @@ export default function ProfileScreen() {
       ranking: [],
       suggestions
     })
-  }, [currentUser])
+
+    if (!backendBadges) return local
+
+    const merged = { ...local }
+    Object.keys(backendBadges).forEach(slug => {
+      const bItem = backendBadges[slug]
+      merged[slug] = {
+        ...merged[slug],
+        current: Math.max(merged[slug]?.current || 0, bItem.current),
+        target: bItem.target,
+        done: (merged[slug]?.done || false) || bItem.done,
+        pct: Math.max(merged[slug]?.pct || 0, bItem.pct),
+        unlockedAt: bItem.unlockedAt
+      }
+    })
+    return merged
+  }, [currentUser, backendBadges])
 
   const filteredBadges = useMemo(() => {
     if (selectedCategory === 'Todas') return BADGES

@@ -36,3 +36,15 @@ export const centralApi = {
   getAnnouncements: () => apiRequest('/announcements'),
   createAnnouncement: (data) => apiRequest('/announcements', { method: 'POST', body: JSON.stringify(data) }),
 }
+
+export const pulseApi = {
+  getToday: () => apiRequest('/pulse/today'),
+  completeReflection: () => apiRequest('/pulse/reflection', { method: 'POST' }),
+  submitTrivia: (selected, correct) => apiRequest('/pulse/trivia', { method: 'POST', body: JSON.stringify({ selected, correct }) }),
+  recordPrayer: (prayerText) => apiRequest('/pulse/prayer', { method: 'POST', body: JSON.stringify({ prayer_text: prayerText }) }),
+}
+
+export const badgesApi = {
+  getMyProgress: () => apiRequest('/badges/my-progress'),
+}
+

@@ -152,11 +152,28 @@ CREATE TABLE IF NOT EXISTS announcements (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS daily_pulses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pulse_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    reflection_done BOOLEAN DEFAULT false,
+    trivia_done BOOLEAN DEFAULT false,
+    trivia_correct BOOLEAN DEFAULT false,
+    trivia_selected INT,
+    prayer_done BOOLEAN DEFAULT false,
+    prayer_text TEXT DEFAULT '',
+    points_awarded INT DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT uq_user_pulse_date UNIQUE (user_id, pulse_date)
+);
+
 CREATE INDEX IF NOT EXISTS idx_attendances_service ON attendances(service_id);
 CREATE INDEX IF NOT EXISTS idx_attendances_user ON attendances(user_id);
 CREATE INDEX IF NOT EXISTS idx_points_user ON points_ledger(user_id);
 CREATE INDEX IF NOT EXISTS idx_points_created ON points_ledger(created_at);
 CREATE INDEX IF NOT EXISTS idx_game_attempts_user_date ON game_attempts(user_id, played_at);
+CREATE INDEX IF NOT EXISTS idx_daily_pulses_user_date ON daily_pulses(user_id, pulse_date);
 `
 
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {

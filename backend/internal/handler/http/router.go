@@ -15,6 +15,8 @@ type RouterConfig struct {
 	PointsHandler  *PointsHandler
 	GameHandler    *GameHandler
 	CentralHandler *CentralHandler
+	PulseHandler   *PulseHandler
+	BadgeHandler   *BadgeHandler
 	JWTSecret      string
 	CORSOrigins    string
 }
@@ -62,6 +64,15 @@ func NewRouter(cfg RouterConfig) *chi.Mux {
 			// Games
 			auth.Get("/games/{type}/questions", cfg.GameHandler.GetQuestions)
 			auth.Post("/games/{type}/submit", cfg.GameHandler.SubmitGame)
+
+			// Pulso Diario
+			auth.Get("/pulse/today", cfg.PulseHandler.GetToday)
+			auth.Post("/pulse/reflection", cfg.PulseHandler.CompleteReflection)
+			auth.Post("/pulse/trivia", cfg.PulseHandler.SubmitTrivia)
+			auth.Post("/pulse/prayer", cfg.PulseHandler.RecordPrayer)
+
+			// Badges / Logros
+			auth.Get("/badges/my-progress", cfg.BadgeHandler.GetMyProgress)
 
 			// Team Routes (/central)
 			auth.Group(func(team chi.Router) {
