@@ -48,35 +48,34 @@ function StatCard({ icon: Icon, label, value, to, color = '#2563EB' }) {
 
 export default function CentralHome() {
   const { isPastoral, canManageUsers, isSuperAdmin } = useAuth()
-  const [usersCount, setUsersCount] = useState(28)
-  const [servicesCount, setServicesCount] = useState(1)
-  const [announcementsCount, setAnnouncementsCount] = useState(1)
-  const [suggestionsCount, setSuggestionsCount] = useState(2)
-  const [completionsCount, setCompletionsCount] = useState(4)
+  const [stats, setStats] = useState({
+    active_users: 0,
+    upcoming_services: 0,
+    pending_suggestions: 0,
+    challenge_completions: 0,
+    announcements: 0,
+  })
 
   useEffect(() => {
-    centralApi.getUsers().then(u => {
-      if (u && u.length > 0) setUsersCount(u.length)
-    }).catch(() => {})
-
-    servicesApi.list().then(s => {
-      if (s) {
-        const up = s.filter(x => x.status === 'upcoming').length
-        setServicesCount(up)
-      }
-    }).catch(() => {})
-
-    centralApi.getAnnouncements().then(a => {
-      if (a && a.length > 0) setAnnouncementsCount(a.length)
-    }).catch(() => {})
-
-    try {
-      const sugs = JSON.parse(localStorage.getItem('intimos_suggestions') || '[]')
-      if (sugs.length > 0) setSuggestionsCount(sugs.filter(s => s.status === 'recibida').length)
-    } catch {}
+    centralApi.getStats()
+      .then(res => {
+        if (res) setStats(res)
+      })
+      .catch(() => {
+        // Fallback to individual calls if needed
+        centralApi.getUsers().then(u => {
+          if (u) setStats(prev => ({ ...prev, active_users: u.length }))
+        }).catch(() => {})
+        servicesApi.list().then(s => {
+          if (s) setStats(prev => ({ ...prev, upcoming_services: s.filter(x => x.status === 'upcoming').length }))
+        }).catch(() => {})
+        centralApi.getAnnouncements().then(a => {
+          if (a) setStats(prev => ({ ...prev, announcements: a.length }))
+        }).catch(() => {})
+      })
   }, [])
 
-  const modules = [
+  const teamModules = [
     { to: '/central/servicios', icon: Calendar, label: 'Servicios', desc: 'Crear y gestionar servicios' },
     { to: '/central/asistencia', icon: CheckSquare, label: 'Asistencia', desc: 'Check-in y registros' },
     { to: '/central/directorio', icon: Users, label: 'Directorio', desc: 'Ver todos los miembros' },
@@ -86,13 +85,28 @@ export default function CentralHome() {
     { to: '/central/ideas', icon: Lightbulb, label: 'Ideas', desc: 'Banco de ideas' },
     { to: '/central/cumpleanos', icon: Gift, label: 'Cumpleaños', desc: 'Gestionar fechas' },
     { to: '/central/campamento', icon: Tent, label: 'Campamento', desc: 'Descuentos por asistencia' },
-    ...(isPastoral ? [
-      { to: '/central/finanzas', icon: DollarSign, label: 'Finanzas', desc: 'Ingresos y egresos' },
-    ] : []),
+    { to: '/central/retos', icon: Swords, label: 'Reto Semanal', desc: 'Gestionar retos activos' },
+    { to: '/central/daily-challenge', icon: Zap, label: 'Reto Diario', desc: 'Configurar juegos bíblicos' },
     ...(canManageUsers ? [
       { to: '/central/usuarios', icon: UserCog, label: 'Usuarios', desc: 'Gestión de cuentas' },
     ] : []),
   ]
+
+  const pastoralModules = [
+    { to: '/central/reflexiones', icon: BookOpen, label: 'Reflexiones', desc: 'Moderación de devocionales' },
+    { to: '/central/finanzas', icon: DollarSign, label: 'Finanzas', desc: 'Ingresos y egresos' },
+    { to: '/central/qr', icon: QrCode, label: 'QR Check-in', desc: 'Configurar y proyectar QR' },
+    { to: '/central/playlists', icon: ListMusic, label: 'Playlists', desc: 'Listas de Spotify / Apple' },
+    { to: '/central/analytics', icon: BarChart2, label: 'Analítica Juegos', desc: 'Rendimiento en retos' },
+  ]
+
+  const superAdminModules = [
+    { to: '/central/grupos', icon: UsersRound, label: 'Grupos', desc: 'Administrar grupos y líderes' },
+    { to: '/central/funcionalidades', icon: Settings, label: 'Funcionalidades', desc: 'Feature flags activas' },
+    { to: '/central/puntos-config', icon: Zap, label: 'Puntos Config', desc: 'Valores y reglas del sistema' },
+  ]
+
+  const totalActiveModules = teamModules.length + (isPastoral ? pastoralModules.length : 0) + (isSuperAdmin ? superAdminModules.length : 0)
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto pb-24 sm:pb-6 space-y-6">
@@ -102,24 +116,23 @@ export default function CentralHome() {
         <p className="text-xs sm:text-sm text-muted mt-0.5">Panel del equipo de liderazgo</p>
       </div>
 
-      {/* Quick Stats Grid (2 columns on mobile, 3 on desktop) */}
+      {/* Quick Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <StatCard icon={Users} label="Miembros activos" value={usersCount} to="/central/directorio" color="#2563EB" />
-        <StatCard icon={Calendar} label="Servicios próximos" value={servicesCount} to="/central/servicios" color="#EC4899" />
-        <StatCard icon={MessageSquare} label="Sugerencias nuevas" value={suggestionsCount} to="/central/sugerencias" color="#F59E0B" />
-        <StatCard icon={CheckSquare} label="Reto: completaciones" value={completionsCount} to="/central/retos" color="#10B981" />
-        <StatCard icon={Megaphone} label="Avisos publicados" value={announcementsCount} to="/central/avisos" color="#9333EA" />
-        <StatCard icon={Star} label="Módulos activos" value={isPastoral ? 11 : 9} to="/central" color="#7C3AED" />
+        <StatCard icon={Users} label="Miembros registrados" value={stats.active_users || 0} to="/central/directorio" color="#2563EB" />
+        <StatCard icon={Calendar} label="Servicios próximos" value={stats.upcoming_services || 0} to="/central/servicios" color="#EC4899" />
+        <StatCard icon={MessageSquare} label="Sugerencias pendientes" value={stats.pending_suggestions || 0} to="/central/sugerencias" color="#F59E0B" />
+        <StatCard icon={CheckSquare} label="Reto: completaciones" value={stats.challenge_completions || 0} to="/central/retos" color="#10B981" />
+        <StatCard icon={Megaphone} label="Avisos publicados" value={stats.announcements || 0} to="/central/avisos" color="#9333EA" />
+        <StatCard icon={Star} label="Módulos accesibles" value={totalActiveModules} to="/central" color="#7C3AED" />
       </div>
 
-      {/* Quick Nav Grid */}
+      {/* Team Modules */}
       <div>
         <h2 className="font-bold text-muted mb-3 text-xs uppercase tracking-wider">
-          Acceso rápido
+          Módulos de Equipo
         </h2>
-
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {modules.map(({ to, icon: Icon, label, desc }) => (
+          {teamModules.map(({ to, icon: Icon, label, desc }) => (
             <Link key={to} to={to}>
               <Card className="hover:border-accent/40 transition-all hover:-translate-y-0.5 cursor-pointer h-full">
                 <Icon size={20} className="text-accent-light mb-2" />
@@ -130,6 +143,48 @@ export default function CentralHome() {
           ))}
         </div>
       </div>
+
+      {/* Pastoral Modules */}
+      {isPastoral && (
+        <div>
+          <h2 className="font-bold text-muted mb-3 text-xs uppercase tracking-wider flex items-center gap-1.5">
+            <BookOpen size={14} className="text-indigo-400" />
+            Acceso Pastoral
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {pastoralModules.map(({ to, icon: Icon, label, desc }) => (
+              <Link key={to} to={to}>
+                <Card className="hover:border-indigo-400/40 transition-all hover:-translate-y-0.5 cursor-pointer h-full">
+                  <Icon size={20} className="text-indigo-400 mb-2" />
+                  <p className="text-xs sm:text-sm font-bold text-text-primary">{label}</p>
+                  <p className="text-[10px] text-muted mt-0.5 leading-snug">{desc}</p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Super Admin Modules */}
+      {isSuperAdmin && (
+        <div>
+          <h2 className="font-bold text-muted mb-3 text-xs uppercase tracking-wider flex items-center gap-1.5">
+            <Settings size={14} className="text-amber-400" />
+            Administración del Sistema
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {superAdminModules.map(({ to, icon: Icon, label, desc }) => (
+              <Link key={to} to={to}>
+                <Card className="hover:border-amber-400/40 transition-all hover:-translate-y-0.5 cursor-pointer h-full">
+                  <Icon size={20} className="text-amber-400 mb-2" />
+                  <p className="text-xs sm:text-sm font-bold text-text-primary">{label}</p>
+                  <p className="text-[10px] text-muted mt-0.5 leading-snug">{desc}</p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

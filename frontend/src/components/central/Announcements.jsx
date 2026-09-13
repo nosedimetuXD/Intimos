@@ -45,6 +45,16 @@ export default function Announcements() {
     }
   }
 
+  const handleDelete = async (id) => {
+    if (!confirm('¿Eliminar este aviso?')) return
+    try {
+      await centralApi.deleteAnnouncement(id)
+      setAnnouncements(prev => prev.filter(a => a.id !== id))
+    } catch (err) {
+      alert(err.message || 'Error al eliminar aviso')
+    }
+  }
+
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4 pb-24 sm:pb-6">
       <div className="flex items-center justify-between">
@@ -73,9 +83,18 @@ export default function Announcements() {
                   <Megaphone size={16} className="text-purple-400" />
                   <h3 className="font-bold text-sm text-text-primary">{ann.title}</h3>
                 </div>
-                <span className="text-[10px] text-muted">
-                  {format(new Date(ann.created_at || Date.now()), "d 'de' MMMM", { locale: es })}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted">
+                    {format(new Date(ann.created_at || Date.now()), "d 'de' MMMM", { locale: es })}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(ann.id)}
+                    className="p-1 rounded-lg text-muted hover:text-rose-400 transition-colors"
+                    title="Eliminar aviso"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
               <p className="text-xs text-text-secondary leading-relaxed">{ann.content}</p>
             </Card>

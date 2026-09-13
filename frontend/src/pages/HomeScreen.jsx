@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { servicesApi, pointsApi, centralApi } from '../api'
+import { servicesApi, pointsApi, centralApi, reflectionsApi, challengesApi } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { 
   Calendar, 
@@ -20,13 +20,17 @@ import {
   Users,
   MessageSquare,
   CheckCircle2,
-  Lock
+  Circle,
+  Lock,
+  LayoutDashboard,
+  Target
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Card, Btn, Avatar, Modal, MedalBadge, MedalIcon, LevelBadge } from '../components/ui'
 
 const DAILY_VERSES = [
+  { verse: "Digo: ¿Qué es el hombre, para que tengas de él memoria, Y el hijo del hombre, para que lo visites?", reference: "Salmos 8:4" },
   { verse: "Todo lo puedo en Cristo que me fortalece.", reference: "Filipenses 4:13" },
   { verse: "Jehová es mi pastor; nada me faltará.", reference: "Salmos 23:1" },
   { verse: "Porque yo sé los pensamientos que tengo acerca de vosotros, pensamientos de paz y no de mal.", reference: "Jeremías 29:11" },
@@ -38,12 +42,13 @@ const DAILY_VERSES = [
 ]
 
 export default function HomeScreen() {
-  const { currentUser, totalPoints, level, refreshProfile } = useAuth()
+  const { currentUser, totalPoints, level, isTeam, refreshProfile } = useAuth()
   const navigate = useNavigate()
 
   const [upcomingService, setUpcomingService] = useState(null)
   const [ranking, setRanking] = useState([])
   const [announcements, setAnnouncements] = useState([])
+  const [activeChallenge, setActiveChallenge] = useState(null)
   const [loading, setLoading] = useState(true)
 
   // Reflection modal
@@ -69,15 +74,17 @@ export default function HomeScreen() {
 
     async function loadData() {
       try {
-        const [serviceData, rankingData, announcementsData] = await Promise.all([
+        const [serviceData, rankingData, announcementsData, challengeData] = await Promise.all([
           servicesApi.getUpcoming().catch(() => null),
           pointsApi.getRanking().catch(() => []),
           centralApi.getAnnouncements().catch(() => []),
+          challengesApi.getActive().catch(() => null),
         ])
 
         setUpcomingService(serviceData)
         setRanking(rankingData || [])
         setAnnouncements(announcementsData || [])
+        setActiveChallenge(challengeData)
       } catch (err) {
         console.error('Error loading home data:', err)
       } finally {
@@ -90,29 +97,24 @@ export default function HomeScreen() {
   const handleSendReflection = async () => {
     if (!reflectionText.trim()) return
 
-    // Save reflection locally
-    const refData = {
-      text: reflectionText.trim(),
-      isPublic: reflectionPublic,
-      author: currentUser?.full_name || 'Miembro',
-      date: todayStr,
-      timestamp: Date.now()
-    }
-    localStorage.setItem(`intimos_reflection_${todayStr}_${currentUser?.id}`, JSON.stringify(refData))
-    
-    // Save to shared reflections feed in localStorage
     try {
-      const allReflections = JSON.parse(localStorage.getItem('intimos_community_reflections') || '[]')
-      allReflections.unshift(refData)
-      localStorage.setItem('intimos_community_reflections', JSON.stringify(allReflections.slice(0, 50)))
-    } catch {}
-
-    setHasReflectedToday(true)
-    setShowReflection(false)
-    setReflectionText('')
-    setToastMsg('¡Reflexión enviada! +25 pts de meditación')
-    setTimeout(() => setToastMsg(null), 3500)
-    refreshProfile()
+      await reflectionsApi.create({
+        verse_ref: todayVerse.reference,
+        content: reflectionText.trim(),
+        is_public: reflectionPublic,
+      })
+      localStorage.setItem(`intimos_reflection_${todayStr}_${currentUser?.id}`, 'true')
+      setHasReflectedToday(true)
+      setShowReflection(false)
+      setReflectionText('')
+      setToastMsg('¡Reflexión guardada en el servidor! +25 pts ganados')
+      setTimeout(() => setToastMsg(null), 3500)
+      refreshProfile()
+    } catch (err) {
+      console.error(err)
+      setToastMsg('Error al guardar la reflexión')
+      setTimeout(() => setToastMsg(null), 3500)
+    }
   }
 
   // Ranking calculation
@@ -289,7 +291,7 @@ export default function HomeScreen() {
             <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
               hasReflectedToday ? 'bg-emerald-500/20 text-emerald-400' : 'bg-card2 border border-border text-muted'
             }`}>
-              {hasReflectedToday ? '✓' : '○'}
+              {hasReflectedToday ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Circle size={14} className="text-muted" />}
             </div>
             <span className={`flex-1 text-xs ${hasReflectedToday ? 'line-through text-muted' : 'text-text-primary font-medium'}`}>
               Reflexión del versículo del día
@@ -306,7 +308,7 @@ export default function HomeScreen() {
             className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-accent/5 cursor-pointer active:scale-[0.99] transition-all text-left"
           >
             <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold bg-card2 border border-border text-muted">
-              ○
+              <Circle size={14} className="text-muted" />
             </div>
             <span className="flex-1 text-xs text-text-primary font-medium">
               Completar reto bíblico (Verso Flash, Reto 60)
@@ -322,7 +324,7 @@ export default function HomeScreen() {
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-accent/5 cursor-pointer active:scale-[0.99] transition-all text-left"
             >
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold bg-card2 border border-border text-muted">
-                ○
+                <Circle size={14} className="text-muted" />
               </div>
               <span className="flex-1 text-xs text-text-primary font-medium">
                 Asistencia al servicio "{upcomingService.title}"
@@ -334,6 +336,60 @@ export default function HomeScreen() {
           )}
         </div>
       </Card>
+
+      {/* Active Weekly Challenge */}
+      {activeChallenge && (
+        <div className="p-3.5 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/15 via-card to-card flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0">
+              <Target size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Reto de la semana</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-300">+{activeChallenge.points} pts</span>
+              </div>
+              <h3 className="text-xs font-bold text-text-primary">{activeChallenge.title}</h3>
+              <p className="text-[11px] text-muted line-clamp-1">{activeChallenge.description}</p>
+            </div>
+          </div>
+          {activeChallenge.completed_by_me ? (
+            <span className="text-xs text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              <CheckCircle2 size={13} /> Hecho
+            </span>
+          ) : (
+            <button
+              onClick={async () => {
+                await challengesApi.complete(activeChallenge.id).catch(() => {})
+                setActiveChallenge(prev => ({ ...prev, completed_by_me: true }))
+                refreshProfile()
+              }}
+              className="text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl shadow-sm transition-all"
+            >
+              Ya lo hice
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Central Panel Access Banner (Team only) */}
+      {isTeam && (
+        <div
+          onClick={() => navigate('/central')}
+          className="p-3.5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-card to-card hover:border-amber-500/50 cursor-pointer transition-all active:scale-[0.99] flex items-center justify-between shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
+              <LayoutDashboard size={20} />
+            </div>
+            <div>
+              <h3 className="text-xs font-black text-text-primary">Panel Central</h3>
+              <p className="text-[11px] text-muted">Gestión de servicios, asistencia, puntos, campamento y finanzas</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-muted flex-shrink-0" />
+        </div>
+      )}
 
       {/* Upcoming Service Card */}
       {upcomingService && (

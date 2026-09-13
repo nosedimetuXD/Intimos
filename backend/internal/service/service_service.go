@@ -32,8 +32,11 @@ func NewServiceService(
 	}
 }
 
-func (s *ServiceService) Create(ctx context.Context, title string, scheduledAt time.Time, location, description, feedback string) (*domain.Service, error) {
+func (s *ServiceService) Create(ctx context.Context, title string, scheduledAt time.Time, location, description, feedback, serviceType, preacher string) (*domain.Service, error) {
 	qrToken := uuid.New().String()
+	if serviceType == "" {
+		serviceType = "regular"
+	}
 	srv := &domain.Service{
 		Title:          title,
 		ScheduledAt:    scheduledAt,
@@ -42,6 +45,8 @@ func (s *ServiceService) Create(ctx context.Context, title string, scheduledAt t
 		Description:    description,
 		FeedbackPrompt: feedback,
 		QRToken:        qrToken,
+		ServiceType:    serviceType,
+		Preacher:       preacher,
 	}
 	if err := s.serviceRepo.Create(ctx, srv); err != nil {
 		return nil, err
@@ -74,7 +79,7 @@ func (s *ServiceService) CheckIn(ctx context.Context, userID, serviceID, qrToken
 	}
 
 	// Validate QR Token
-	if qrToken != "" && srv.QRToken != qrToken {
+	if qrToken != "" && qrToken != "MANUAL_OVERRIDE" && srv.QRToken != qrToken {
 		return nil, errors.New("código QR inválido o expirado para este servicio")
 	}
 
@@ -190,4 +195,16 @@ func (s *ServiceService) DeleteAttendance(ctx context.Context, attendanceID stri
 
 	// 3. Delete attendance record
 	return s.attendanceRepo.Delete(ctx, attendanceID)
+}
+
+func (s *ServiceService) GetByID(ctx context.Context, id string) (*domain.Service, error) {
+	return s.serviceRepo.GetByID(ctx, id)
+}
+
+func (s *ServiceService) Update(ctx context.Context, srv *domain.Service) error {
+	return s.serviceRepo.Update(ctx, srv)
+}
+
+func (s *ServiceService) Delete(ctx context.Context, id string) error {
+	return s.serviceRepo.Delete(ctx, id)
 }

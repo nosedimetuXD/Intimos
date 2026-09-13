@@ -39,7 +39,7 @@ export default function CampSavings() {
   
   // Projection Mode
   const [projectUser, setProjectUser] = useState(null)
-  const [revealPrivateMoney, setRevealPrivateMoney] = useState(false) // 👁 Modo Privacidad
+  const [revealPrivateMoney, setRevealPrivateMoney] = useState(false) // Modo Privacidad
   const [campPrice, setCampPrice] = useState(DEFAULT_CAMP_PRICE)
 
   const loadData = async () => {

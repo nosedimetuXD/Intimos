@@ -1,66 +1,101 @@
 import React, { useState, useEffect } from 'react'
-import { ListMusic, Plus, Trash2, ExternalLink } from 'lucide-react'
+import { ListMusic, Plus, Trash2, ExternalLink, Music2, CheckCircle2 } from 'lucide-react'
+import { playlistsApi } from '../../api'
 import { Card, Btn, Modal } from '../ui'
 
 export default function PlaylistsManagement() {
   const [playlists, setPlaylists] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [msg, setMsg] = useState('')
 
-  const loadPlaylists = () => {
+  const loadPlaylists = async () => {
     try {
-      const stored = JSON.parse(localStorage.getItem('intimos_playlists') || '[]')
-      setPlaylists(stored)
-    } catch {}
+      const list = await playlistsApi.list()
+      setPlaylists(list || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     loadPlaylists()
   }, [])
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault()
     if (!name.trim() || !url.trim()) return
 
-    const newPl = {
-      id: String(Date.now()),
-      name: name.trim(),
-      description: description.trim(),
-      url: url.trim(),
+    setSubmitting(true)
+    try {
+      await playlistsApi.create({
+        title: name.trim(),
+        description: description.trim(),
+        url: url.trim(),
+        platform: url.includes('apple') ? 'apple' : 'spotify',
+      })
+      setMsg('Playlist agregada con éxito')
+      setTimeout(() => setMsg(''), 3000)
+      setName('')
+      setDescription('')
+      setUrl('')
+      setShowModal(false)
+      loadPlaylists()
+    } catch (err) {
+      alert(err.message || 'Error al guardar playlist')
+    } finally {
+      setSubmitting(false)
     }
-
-    const updated = [...playlists, newPl]
-    setPlaylists(updated)
-    localStorage.setItem('intimos_playlists', JSON.stringify(updated))
-    setName('')
-    setDescription('')
-    setUrl('')
-    setShowModal(false)
   }
 
-  const handleDelete = (id) => {
-    const updated = playlists.filter(p => p.id !== id)
-    setPlaylists(updated)
-    localStorage.setItem('intimos_playlists', JSON.stringify(updated))
+  const handleDelete = async (id) => {
+    if (!confirm('¿Eliminar esta playlist?')) return
+    try {
+      await playlistsApi.delete(id)
+      setPlaylists(prev => prev.filter(p => p.id !== id))
+      setMsg('Playlist eliminada')
+      setTimeout(() => setMsg(''), 3000)
+    } catch (err) {
+      alert(err.message || 'Error al eliminar playlist')
+    }
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4 pb-24 sm:pb-6">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4 pb-24 sm:pb-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-black text-text-primary">Playlists del Ministerio</h1>
-          <p className="text-xs text-muted">Administra las listas de reproducción de Spotify visibles en la app</p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+            <ListMusic size={20} />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-text-primary">Playlists del Ministerio</h1>
+            <p className="text-xs text-muted">Listas de alabanza de Spotify y Apple Music para la comunidad</p>
+          </div>
         </div>
-        <Btn onClick={() => setShowModal(true)}>
-          <Plus size={16} />
-          <span>Nueva Playlist</span>
+        <Btn onClick={() => setShowModal(true)} size="sm">
+          <Plus size={15} />
+          <span>Agregar</span>
         </Btn>
       </div>
 
-      {playlists.length === 0 ? (
+      {msg && (
+        <div className="p-3 rounded-xl bg-accent/15 border border-accent/30 text-accent-light text-xs font-semibold flex items-center gap-2">
+          <CheckCircle2 size={16} />
+          <span>{msg}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="py-16 text-center text-xs text-muted">Cargando playlists...</div>
+      ) : playlists.length === 0 ? (
         <Card className="text-center py-12">
+          <Music2 size={32} className="mx-auto mb-2 opacity-30 text-muted" />
           <p className="text-xs text-muted">No hay playlists personalizadas agregadas.</p>
         </Card>
       ) : (
@@ -68,13 +103,13 @@ export default function PlaylistsManagement() {
           {playlists.map(pl => (
             <Card key={pl.id} className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-xs sm:text-sm text-text-primary truncate">{pl.name}</h3>
+                <h3 className="font-bold text-xs sm:text-sm text-text-primary truncate">{pl.title || pl.name}</h3>
                 <p className="text-[11px] text-muted mt-0.5 line-clamp-1">{pl.description}</p>
                 <a
                   href={pl.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] text-accent-light hover:underline flex items-center gap-1 mt-1 font-mono truncate"
+                  className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 mt-1 font-mono truncate"
                 >
                   <ExternalLink size={10} />
                   <span>{pl.url}</span>
@@ -84,6 +119,7 @@ export default function PlaylistsManagement() {
               <button
                 onClick={() => handleDelete(pl.id)}
                 className="p-2 rounded-xl text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors flex-shrink-0"
+                title="Eliminar playlist"
               >
                 <Trash2 size={16} />
               </button>
@@ -99,18 +135,9 @@ export default function PlaylistsManagement() {
             <label className="text-xs font-semibold text-text-secondary">Nombre de la lista</label>
             <input
               required
-              placeholder="Ej. Alabanzas de Adoración 2026"
+              placeholder="Ej. Alabanza Íntimos Jóvenes"
               value={name}
               onChange={e => setName(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-text-secondary">Descripción</label>
-            <input
-              placeholder="Ej. Canciones tocadas por la banda del grupo"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
             />
           </div>
 

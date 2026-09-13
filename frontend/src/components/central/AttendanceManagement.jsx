@@ -50,7 +50,7 @@ export default function AttendanceManagement() {
     if (!manualUserId || !selectedServiceId) return
     try {
       const selectedUser = users.find(u => u.id === manualUserId)
-      await servicesApi.checkIn(selectedServiceId, 'MANUAL_OVERRIDE')
+      await servicesApi.checkIn(selectedServiceId, 'MANUAL_OVERRIDE', manualUserId)
       alert(`Asistencia registrada para ${selectedUser?.full_name || 'usuario'}`)
       setShowManualModal(false)
       setManualUserId('')

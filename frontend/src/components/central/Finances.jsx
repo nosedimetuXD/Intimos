@@ -57,7 +57,15 @@ export default function Finances() {
     .filter(f => f.type === 'expense')
     .reduce((acc, f) => acc + (parseFloat(f.amount) || 0), 0)
 
-  const balance = totalIncome - totalExpense
+  const handleDelete = async (id) => {
+    if (!confirm('¿Eliminar este registro financiero?')) return
+    try {
+      await centralApi.deleteFinance(id)
+      setFinances(prev => prev.filter(f => f.id !== id))
+    } catch (err) {
+      alert(err.message || 'Error al eliminar registro')
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4 pb-24 sm:pb-6">
@@ -129,9 +137,18 @@ export default function Finances() {
                     </p>
                   </div>
 
-                  <span className={`font-black text-xs ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {isIncome ? `+$${parseFloat(f.amount).toLocaleString()}` : `-$${parseFloat(f.amount).toLocaleString()}`}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`font-black text-xs ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {isIncome ? `+$${parseFloat(f.amount).toLocaleString()}` : `-$${parseFloat(f.amount).toLocaleString()}`}
+                    </span>
+                    <button
+                      onClick={() => handleDelete(f.id)}
+                      className="p-1 rounded-lg text-muted hover:text-rose-400 transition-colors"
+                      title="Eliminar movimiento"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
               )
             })}

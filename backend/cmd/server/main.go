@@ -63,7 +63,7 @@ func main() {
 	serviceHandler := httphandler.NewServiceHandler(serviceService)
 	pointsHandler := httphandler.NewPointsHandler(pointsService)
 	gameHandler := httphandler.NewGameHandler(gameService)
-	centralHandler := httphandler.NewCentralHandler(userRepo, centralRepo)
+	centralHandler := httphandler.NewCentralHandler(userRepo, centralRepo, pointsRepo)
 	pulseHandler := httphandler.NewPulseHandler(pulseService)
 	badgeHandler := httphandler.NewBadgeHandler(badgeService)
 

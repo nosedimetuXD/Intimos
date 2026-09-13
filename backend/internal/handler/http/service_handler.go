@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"intimos/backend/internal/domain"
 	"intimos/backend/internal/middleware"
 	"intimos/backend/internal/service"
 	"intimos/backend/pkg/response"
@@ -43,6 +44,8 @@ type CreateServiceRequest struct {
 	Location       string    `json:"location"`
 	Description    string    `json:"description"`
 	FeedbackPrompt string    `json:"feedback_prompt"`
+	ServiceType    string    `json:"service_type"`
+	Preacher       string    `json:"preacher"`
 }
 
 func (h *ServiceHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +60,7 @@ func (h *ServiceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srv, err := h.serviceService.Create(r.Context(), req.Title, req.ScheduledAt, req.Location, req.Description, req.FeedbackPrompt)
+	srv, err := h.serviceService.Create(r.Context(), req.Title, req.ScheduledAt, req.Location, req.Description, req.FeedbackPrompt, req.ServiceType, req.Preacher)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -66,8 +69,70 @@ func (h *ServiceHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusCreated, srv)
 }
 
+func (h *ServiceHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	srv, err := h.serviceService.GetByID(r.Context(), id)
+	if err != nil || srv == nil {
+		response.Error(w, http.StatusNotFound, "servicio no encontrado")
+		return
+	}
+	response.JSON(w, http.StatusOK, srv)
+}
+
+type UpdateServiceRequest struct {
+	Title          string              `json:"title"`
+	ScheduledAt    time.Time           `json:"scheduled_at"`
+	Status         domain.ServiceStatus `json:"status"`
+	Location       string              `json:"location"`
+	Description    string              `json:"description"`
+	FeedbackPrompt string              `json:"feedback_prompt"`
+	ServiceType    string              `json:"service_type"`
+	Preacher       string              `json:"preacher"`
+}
+
+func (h *ServiceHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var req UpdateServiceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "cuerpo de solicitud inválido")
+		return
+	}
+
+	srv, err := h.serviceService.GetByID(r.Context(), id)
+	if err != nil || srv == nil {
+		response.Error(w, http.StatusNotFound, "servicio no encontrado")
+		return
+	}
+
+	srv.Title = req.Title
+	srv.ScheduledAt = req.ScheduledAt
+	srv.Status = req.Status
+	srv.Location = req.Location
+	srv.Description = req.Description
+	srv.FeedbackPrompt = req.FeedbackPrompt
+	srv.ServiceType = req.ServiceType
+	srv.Preacher = req.Preacher
+
+	if err := h.serviceService.Update(r.Context(), srv); err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.JSON(w, http.StatusOK, srv)
+}
+
+func (h *ServiceHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.serviceService.Delete(r.Context(), id); err != nil {
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.Message(w, http.StatusOK, "servicio eliminado exitosamente")
+}
+
 type CheckInRequest struct {
 	QRToken string `json:"qr_token"`
+	UserID  string `json:"user_id"`
 }
 
 func (h *ServiceHandler) CheckIn(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +146,12 @@ func (h *ServiceHandler) CheckIn(w http.ResponseWriter, r *http.Request) {
 	var req CheckInRequest
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	result, err := h.serviceService.CheckIn(r.Context(), claims.UserID, serviceID, req.QRToken)
+	targetUserID := claims.UserID
+	if req.UserID != "" && claims.Role != "member" {
+		targetUserID = req.UserID
+	}
+
+	result, err := h.serviceService.CheckIn(r.Context(), targetUserID, serviceID, req.QRToken)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return

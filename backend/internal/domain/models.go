@@ -15,20 +15,31 @@ const (
 )
 
 type User struct {
-	ID           string     `json:"id"`
-	Email        string     `json:"email"`
-	PasswordHash string     `json:"-"`
-	FullName     string     `json:"full_name"`
-	Phone        string     `json:"phone"`
-	Birthday     *time.Time `json:"birthday,omitempty"`
-	InvitedByID  *string    `json:"invited_by_id,omitempty"`
-	InvitedBy    *string    `json:"invited_by_name,omitempty"`
-	Role         Role       `json:"role"`
-	Active       bool       `json:"active"`
-	AvatarURL    string     `json:"avatar_url"`
-	Notes        string     `json:"notes"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+	ID                string     `json:"id"`
+	Email             string     `json:"email"`
+	PasswordHash      string     `json:"-"`
+	FullName          string     `json:"full_name"`
+	Phone             string     `json:"phone"`
+	Birthday          *time.Time `json:"birthday,omitempty"`
+	InvitedByID       *string    `json:"invited_by_id,omitempty"`
+	InvitedBy         *string    `json:"invited_by_name,omitempty"`
+	Role              Role       `json:"role"`
+	Active            bool       `json:"active"`
+	AvatarURL         string     `json:"avatar_url"`
+	Notes             string     `json:"notes"`
+	Address           string     `json:"address"`
+	Profession        string     `json:"profession"`
+	Skills            string     `json:"skills"`
+	GodfatherID       *string    `json:"godfather_id,omitempty"`
+	GodfatherName     *string    `json:"godfather_name,omitempty"`
+	PrayerPartnerID   *string    `json:"prayer_partner_id,omitempty"`
+	PrayerPartnerName *string    `json:"prayer_partner_name,omitempty"`
+	Streak            int        `json:"streak"`
+	AttendanceRate    int        `json:"attendance_rate"`
+	MonthPoints       int        `json:"month_points"`
+	TotalPoints       int        `json:"total_points"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 type ServiceStatus string
@@ -48,6 +59,10 @@ type Service struct {
 	Description    string        `json:"description"`
 	FeedbackPrompt string        `json:"feedback_prompt"`
 	QRToken        string        `json:"qr_token"`
+	ServiceType    string        `json:"service_type"` // regular, cine, parque, especial
+	Preacher       string        `json:"preacher"`
+	AttendeeCount  int           `json:"attendee_count"`
+	UserAttended   bool          `json:"user_attended"`
 	CreatedAt      time.Time     `json:"created_at"`
 	UpdatedAt      time.Time     `json:"updated_at"`
 }
@@ -170,6 +185,7 @@ type Reflection struct {
 	Content    string     `json:"content"`
 	Status     string     `json:"status"` // pending, approved, rejected
 	Feedback   string     `json:"feedback"`
+	IsPublic   bool       `json:"is_public"`
 	ReviewedBy *string    `json:"reviewed_by,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
@@ -238,5 +254,108 @@ type DailyPulseStatus struct {
 	Streak         int         `json:"streak"`
 	CompletedCount int         `json:"completed_count"`
 	PointsToday    int         `json:"points_today"`
+}
+
+type Suggestion struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	UserName  string    `json:"user_name,omitempty"`
+	UserEmail string    `json:"user_email,omitempty"`
+	Category  string    `json:"category"` // dinamica, tema, mejora, otro
+	Content   string    `json:"content"`
+	Status    string    `json:"status"` // recibida, revision, implementada
+	Feedback  string    `json:"feedback"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Idea struct {
+	ID            string    `json:"id"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Category      string    `json:"category"` // series, dinamicas, tematica, parche
+	Tags          []string  `json:"tags"`
+	CreatedBy     *string   `json:"created_by,omitempty"`
+	CreatedByName string    `json:"created_by_name,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type WeeklyChallenge struct {
+	ID             string    `json:"id"`
+	Title          string    `json:"title"`
+	Description    string    `json:"description"`
+	Points         int       `json:"points"`
+	Active         bool      `json:"active"`
+	CreatedBy      *string   `json:"created_by,omitempty"`
+	CompletedCount int       `json:"completed_count"`
+	CompletedByMe  bool      `json:"completed_by_me"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+type Group struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	LeaderID    *string   `json:"leader_id,omitempty"`
+	LeaderName  string    `json:"leader_name,omitempty"`
+	Description string    `json:"description"`
+	Members     []User    `json:"members"`
+	MemberCount int       `json:"member_count"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type Playlist struct {
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	URL         string    `json:"url"`
+	CoverURL    string    `json:"cover_url"`
+	Active      bool      `json:"active"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type FeatureFlag struct {
+	ID           string   `json:"id"`
+	Key          string   `json:"key"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	EnabledRoles []string `json:"enabled_roles"`
+	Active       bool     `json:"active"`
+}
+
+type SystemSetting struct {
+	Key       string                 `json:"key"`
+	Value     map[string]interface{} `json:"value"`
+	UpdatedAt time.Time              `json:"updated_at"`
+}
+
+type CampSummaryUser struct {
+	UserID         string  `json:"user_id"`
+	FullName       string  `json:"full_name"`
+	AvatarURL      string  `json:"avatar_url"`
+	Role           Role    `json:"role"`
+	ServicesCount  int     `json:"services_count"`
+	PunctualCount  int     `json:"punctual_count"`
+	BasePrice      float64 `json:"base_price"`
+	DiscountEarned float64 `json:"discount_earned"`
+	FinalPrice     float64 `json:"final_price"`
+	TotalPaid      float64 `json:"total_paid"`
+	Remaining      float64 `json:"remaining"`
+}
+
+type CampSummary struct {
+	BasePrice   float64           `json:"base_price"`
+	EarlyBonus  float64           `json:"early_bonus"`
+	TotalGoal   float64           `json:"total_goal"`
+	TotalRaised float64           `json:"total_raised"`
+	Users       []CampSummaryUser `json:"users"`
+}
+
+type GameAnalytics struct {
+	GameType       GameType `json:"game_type"`
+	GameName       string   `json:"game_name"`
+	TotalAttempts  int      `json:"total_attempts"`
+	AverageScore   float64  `json:"average_score"`
+	AverageTimeSec int      `json:"average_time_sec"`
+	AccuracyRate   float64  `json:"accuracy_rate"`
 }
 

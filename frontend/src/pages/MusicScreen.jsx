@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react'
-import { Music2, ExternalLink, Play } from 'lucide-react'
+import { Music2, ExternalLink, Play, Loader2 } from 'lucide-react'
 import { Card, Empty } from '../components/ui'
+import { playlistsApi } from '../api'
 
 const DEFAULT_PLAYLISTS = [
   {
     id: '1',
-    name: 'Alabanza & Adoración Íntimos',
+    title: 'Alabanza & Adoración Íntimos',
     description: 'Canciones que cantamos en nuestros encuentros juveniles',
     url: 'https://open.spotify.com/playlist/37i9dQZF1DXdgnKGsv29h8',
   },
   {
     id: '2',
-    name: 'Conexión Profunda',
+    title: 'Conexión Profunda',
     description: 'Música para tu devocional y tiempo a solas con Dios',
     url: 'https://open.spotify.com/playlist/37i9dQZF1DWVzPjqh7R4Fq',
   },
   {
     id: '3',
-    name: 'Gospel & Acoustic',
+    title: 'Gospel & Acoustic',
     description: 'Acústicos y momentos de comunión',
     url: 'https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO',
   },
@@ -25,22 +26,31 @@ const DEFAULT_PLAYLISTS = [
 
 function PlaylistCard({ playlist }) {
   const openSpotify = () => {
-    window.open(playlist.url, '_blank', 'noopener,noreferrer')
+    if (playlist.url) {
+      window.open(playlist.url, '_blank', 'noopener,noreferrer')
+    }
   }
+
+  const title = playlist.title || playlist.name
 
   return (
     <div onClick={openSpotify} className="w-full cursor-pointer">
       <Card className="hover:border-emerald-500/40 transition-all active:scale-[0.99] text-left">
         <div className="flex items-center gap-3.5">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-950 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-900/30">
-            <Music2 size={24} className="text-emerald-300" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-950 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-900/30 overflow-hidden">
+            {playlist.cover_url ? (
+              <img src={playlist.cover_url} alt={title} className="w-full h-full object-cover" />
+            ) : (
+              <Music2 size={24} className="text-emerald-300" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-text-primary text-xs sm:text-sm truncate">{playlist.name}</p>
+            <p className="font-bold text-text-primary text-xs sm:text-sm truncate">{title}</p>
             <p className="text-[11px] text-muted mt-0.5 line-clamp-1">{playlist.description}</p>
             <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                ♫ Spotify
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <Music2 size={11} />
+                <span>Spotify</span>
               </span>
             </div>
           </div>
@@ -57,18 +67,26 @@ function PlaylistCard({ playlist }) {
 
 export default function MusicScreen() {
   const [playlists, setPlaylists] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('intimos_playlists') || '[]')
-      if (stored.length > 0) {
-        setPlaylists(stored)
-      } else {
-        setPlaylists(DEFAULT_PLAYLISTS)
-      }
-    } catch {
-      setPlaylists(DEFAULT_PLAYLISTS)
-    }
+    playlistsApi.list()
+      .then(res => {
+        if (Array.isArray(res) && res.length > 0) {
+          setPlaylists(res)
+        } else {
+          // Local fallback
+          const stored = JSON.parse(localStorage.getItem('intimos_playlists') || '[]')
+          if (stored.length > 0) setPlaylists(stored)
+          else setPlaylists(DEFAULT_PLAYLISTS)
+        }
+      })
+      .catch(() => {
+        const stored = JSON.parse(localStorage.getItem('intimos_playlists') || '[]')
+        if (stored.length > 0) setPlaylists(stored)
+        else setPlaylists(DEFAULT_PLAYLISTS)
+      })
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -89,11 +107,23 @@ export default function MusicScreen() {
         </div>
       </div>
 
-      <div className="space-y-2.5">
-        {playlists.map(pl => (
-          <PlaylistCard key={pl.id} playlist={pl} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 size={28} className="animate-spin text-emerald-400" />
+        </div>
+      ) : playlists.length === 0 ? (
+        <Empty
+          icon={Music2}
+          title="No hay playlists activas"
+          subtitle="Pronto publicaremos nuevas canciones y listas de alabanza."
+        />
+      ) : (
+        <div className="space-y-2.5">
+          {playlists.map(pl => (
+            <PlaylistCard key={pl.id} playlist={pl} />
+          ))}
+        </div>
+      )}
 
       <p className="text-[11px] text-muted text-center pt-2">
         Toca cualquier playlist para abrirla en tu reproductor de Spotify
