@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { DollarSign, Plus, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react'
+import { DollarSign, Plus, ArrowUpRight, ArrowDownRight, TrendingUp, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { centralApi } from '../../api'
@@ -56,6 +56,8 @@ export default function Finances() {
   const totalExpense = finances
     .filter(f => f.type === 'expense')
     .reduce((acc, f) => acc + (parseFloat(f.amount) || 0), 0)
+
+  const balance = totalIncome - totalExpense
 
   const handleDelete = async (id) => {
     if (!confirm('¿Eliminar este registro financiero?')) return

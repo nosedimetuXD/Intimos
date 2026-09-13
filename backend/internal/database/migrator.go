@@ -271,6 +271,18 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	if err != nil {
 		return fmt.Errorf("error executing database migrations: %w", err)
 	}
-	log.Println("✅ Database migrations applied successfully")
+
+	// Sanitize legacy slug reasons in points_ledger
+	cleanSQL := `
+		UPDATE points_ledger SET reason = REPLACE(reason, 'verso_flash', 'Verso Flash') WHERE reason LIKE '%verso_flash%';
+		UPDATE points_ledger SET reason = REPLACE(reason, 'que_harias', '¿Qué Harías?') WHERE reason LIKE '%que_harias%';
+		UPDATE points_ledger SET reason = REPLACE(reason, 'reto_60', 'Reto 60') WHERE reason LIKE '%reto_60%';
+		UPDATE points_ledger SET reason = REPLACE(reason, 'verdadero_falso', 'Verdadero o Falso') WHERE reason LIKE '%verdadero_falso%';
+		UPDATE points_ledger SET reason = REPLACE(reason, 'ahorcado', 'Ahorcado Bíblico') WHERE reason LIKE '%ahorcado%';
+		UPDATE points_ledger SET reason = REPLACE(reason, 'ordena_verso', 'Ordena el Versículo') WHERE reason LIKE '%ordena_verso%';
+	`
+	_, _ = pool.Exec(ctx, cleanSQL)
+
+	log.Println("Database migrations applied successfully")
 	return nil
 }

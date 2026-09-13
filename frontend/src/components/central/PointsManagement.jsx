@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { pointsApi, centralApi } from '../../api'
 import { Card, Btn, Avatar, Empty } from '../ui'
+import { formatReason } from '../../utils/formatters'
 
 const PRESET_AMOUNTS = [50, 100, 200, 300, 500]
 
@@ -281,7 +282,7 @@ export default function PointsManagement() {
                         {isPositive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                       </div>
                       <div>
-                        <p className="font-bold text-text-primary">{h.reason || 'Ajuste de puntos'}</p>
+                        <p className="font-bold text-text-primary">{formatReason(h.reason)}</p>
                         <p className="text-[10px] text-muted mt-0.5">
                           {h.user_name ? `${h.user_name} · ` : ''}
                           {format(new Date(h.created_at || Date.now()), "d 'de' MMMM, h:mm a", { locale: es })}

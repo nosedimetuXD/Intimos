@@ -21,6 +21,7 @@ import {
 import { Card, Avatar, Empty, MedalBadge, MedalIcon, LevelBadge } from '../components/ui'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { formatReason } from '../utils/formatters'
 
 function RankingRow({ user, rank, pts, isMe, ptsAbove }) {
   return (
@@ -341,7 +342,7 @@ export default function CommunityScreen() {
                     {item.points >= 0 ? `+${item.points}` : item.points}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-text-primary truncate">{item.reason}</p>
+                    <p className="text-xs font-bold text-text-primary truncate">{formatReason(item.reason)}</p>
                     <p className="text-[10px] text-muted capitalize">
                       {item.category} · {item.created_at ? format(new Date(item.created_at), "d 'de' MMMM, h:mm a", { locale: es }) : 'Reciente'}
                     </p>
