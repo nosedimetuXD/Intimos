@@ -40,6 +40,23 @@ func (h *CentralHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, users)
 }
 
+func roleRank(role domain.Role) int {
+	switch role {
+	case domain.RoleSuperAdmin:
+		return 4
+	case domain.RolePastoral:
+		return 3
+	case domain.RoleApoyo2:
+		return 2
+	case domain.RoleApoyo:
+		return 1
+	case domain.RoleMiembro:
+		return 0
+	default:
+		return -1
+	}
+}
+
 type UpdateUserRequest struct {
 	FullName string      `json:"full_name"`
 	Phone    string      `json:"phone"`
@@ -49,6 +66,12 @@ type UpdateUserRequest struct {
 }
 
 func (h *CentralHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetCurrentUser(r.Context())
+	if claims == nil {
+		response.Error(w, http.StatusUnauthorized, "no autenticado")
+		return
+	}
+
 	userID := chi.URLParam(r, "id")
 	var req UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -60,6 +83,23 @@ func (h *CentralHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil || u == nil {
 		response.Error(w, http.StatusNotFound, "usuario no encontrado")
 		return
+	}
+
+	callerRole := domain.Role(claims.Role)
+	callerRank := roleRank(callerRole)
+	targetCurrentRank := roleRank(u.Role)
+	targetNewRank := roleRank(req.Role)
+
+	// Hierarchy validation: non-superadmins cannot modify users of equal or higher rank, nor assign higher/equal roles
+	if callerRole != domain.RoleSuperAdmin {
+		if targetCurrentRank >= callerRank && u.ID != claims.UserID {
+			response.Error(w, http.StatusForbidden, "no tiene permisos para modificar un usuario de igual o mayor jerarquía")
+			return
+		}
+		if targetNewRank >= callerRank {
+			response.Error(w, http.StatusForbidden, "no tiene permisos para asignar un rol igual o superior al suyo")
+			return
+		}
 	}
 
 	u.FullName = req.FullName
@@ -272,6 +312,12 @@ type CreateUserAdminRequest struct {
 }
 
 func (h *CentralHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetCurrentUser(r.Context())
+	if claims == nil {
+		response.Error(w, http.StatusUnauthorized, "no autenticado")
+		return
+	}
+
 	var req CreateUserAdminRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "cuerpo de solicitud inválido")
@@ -283,6 +329,20 @@ func (h *CentralHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Password == "" {
 		req.Password = "1234"
+	}
+
+	if req.Role == "" {
+		req.Role = domain.RoleMiembro
+	}
+
+	callerRole := domain.Role(claims.Role)
+	callerRank := roleRank(callerRole)
+	targetNewRank := roleRank(req.Role)
+
+	// Hierarchy validation: non-superadmins cannot assign equal or higher role
+	if callerRole != domain.RoleSuperAdmin && targetNewRank >= callerRank {
+		response.Error(w, http.StatusForbidden, "no tiene permisos para crear un usuario con rol igual o superior al suyo")
+		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -298,9 +358,6 @@ func (h *CentralHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Phone:        req.Phone,
 		Role:         req.Role,
 		Active:       true,
-	}
-	if u.Role == "" {
-		u.Role = domain.RoleMiembro
 	}
 
 	if err := h.userRepo.Create(r.Context(), u); err != nil {
@@ -332,7 +389,34 @@ func (h *CentralHandler) UpdateUserNotes(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *CentralHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetCurrentUser(r.Context())
+	if claims == nil {
+		response.Error(w, http.StatusUnauthorized, "no autenticado")
+		return
+	}
+
 	userID := chi.URLParam(r, "id")
+	if userID == claims.UserID {
+		response.Error(w, http.StatusBadRequest, "no puede eliminar su propia cuenta")
+		return
+	}
+
+	target, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil || target == nil {
+		response.Error(w, http.StatusNotFound, "usuario no encontrado")
+		return
+	}
+
+	callerRole := domain.Role(claims.Role)
+	callerRank := roleRank(callerRole)
+	targetRank := roleRank(target.Role)
+
+	// Hierarchy validation: non-superadmins cannot delete equal or higher rank users
+	if callerRole != domain.RoleSuperAdmin && targetRank >= callerRank {
+		response.Error(w, http.StatusForbidden, "no tiene permisos para eliminar un usuario de igual o mayor jerarquía")
+		return
+	}
+
 	if err := h.userRepo.Delete(r.Context(), userID); err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return

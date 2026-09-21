@@ -202,7 +202,8 @@ export default function HomeScreen() {
         <div className="p-3 bg-card border-t border-border flex items-center justify-between">
           {hasReflectedToday ? (
             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full font-medium">
-              ✓ Ya dejaste tu reflexión hoy
+              <CheckCircle2 size={13} />
+              <span>Ya dejaste tu reflexión hoy</span>
             </span>
           ) : (
             <Btn size="sm" onClick={() => setShowReflection(true)}>

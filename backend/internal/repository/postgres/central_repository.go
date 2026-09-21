@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"intimos/backend/internal/domain"
@@ -653,18 +652,25 @@ func (r *CentralRepository) DeleteFinance(ctx context.Context, id string) error 
 
 // ── REFLECTIONS REVIEW & MODERATION ────────────────────────────────────────
 func (r *CentralRepository) ListReflections(ctx context.Context, onlyPublic bool) ([]*domain.Reflection, error) {
-	where := ""
+	var query string
 	if onlyPublic {
-		where = "WHERE r.is_public = true"
+		query = `
+			SELECT r.id, r.user_id, COALESCE(u.full_name, '') as user_name, r.verse_ref,
+			       r.content, r.status, r.feedback, r.is_public, r.reviewed_by, r.created_at, r.updated_at
+			FROM reflections r
+			JOIN users u ON r.user_id = u.id
+			WHERE r.is_public = true
+			ORDER BY r.created_at DESC
+		`
+	} else {
+		query = `
+			SELECT r.id, r.user_id, COALESCE(u.full_name, '') as user_name, r.verse_ref,
+			       r.content, r.status, r.feedback, r.is_public, r.reviewed_by, r.created_at, r.updated_at
+			FROM reflections r
+			JOIN users u ON r.user_id = u.id
+			ORDER BY r.created_at DESC
+		`
 	}
-	query := fmt.Sprintf(`
-		SELECT r.id, r.user_id, COALESCE(u.full_name, '') as user_name, r.verse_ref,
-		       r.content, r.status, r.feedback, r.is_public, r.reviewed_by, r.created_at, r.updated_at
-		FROM reflections r
-		JOIN users u ON r.user_id = u.id
-		%s
-		ORDER BY r.created_at DESC
-	`, where)
 
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {

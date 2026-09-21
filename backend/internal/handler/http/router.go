@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -24,10 +25,17 @@ type RouterConfig struct {
 func NewRouter(cfg RouterConfig) *chi.Mux {
 	r := chi.NewRouter()
 
+	// Rate limiters (token bucket per IP)
+	globalLimiter := middleware.NewIPRateLimiter(100, time.Minute)
+	authLimiter := middleware.NewIPRateLimiter(5, time.Minute)
+	writeLimiter := middleware.NewIPRateLimiter(20, time.Minute)
+
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
+	r.Use(middleware.SecurityHeadersMiddleware())
+	r.Use(globalLimiter.Middleware("global"))
 	r.Use(middleware.NewCORSMiddleware(cfg.CORSOrigins))
 
 	authMiddleware := middleware.AuthMiddleware(cfg.JWTSecret)
@@ -40,9 +48,9 @@ func NewRouter(cfg RouterConfig) *chi.Mux {
 	})
 
 	r.Route("/api", func(api chi.Router) {
-		// Public Auth
-		api.Post("/auth/login", cfg.AuthHandler.Login)
-		api.Post("/auth/register", cfg.AuthHandler.Register)
+		// Public Auth (protected by strict 5 req/min rate limit)
+		api.With(authLimiter.Middleware("auth")).Post("/auth/login", cfg.AuthHandler.Login)
+		api.With(authLimiter.Middleware("auth")).Post("/auth/register", cfg.AuthHandler.Register)
 
 		// Public Services & Rankings & Community
 		api.Get("/services/upcoming", cfg.ServiceHandler.GetUpcoming)
@@ -51,42 +59,42 @@ func NewRouter(cfg RouterConfig) *chi.Mux {
 		api.Get("/playlists", cfg.CentralHandler.ListPlaylists)
 		api.Get("/reflections/public", cfg.CentralHandler.ListPublicReflections)
 		api.Get("/challenges/weekly", cfg.CentralHandler.GetActiveWeeklyChallenge)
-		api.Get("/users/birthdays", cfg.CentralHandler.GetBirthdays)
 
 		// Authenticated Routes
 		api.Group(func(auth chi.Router) {
 			auth.Use(authMiddleware)
 
-			// Current User & Profile
+			// Current User & Profile & Directory
 			auth.Get("/auth/me", cfg.AuthHandler.GetMe)
 			auth.Put("/users/me", cfg.CentralHandler.UpdateMyProfile)
 			auth.Post("/users/prayer-partner", cfg.CentralHandler.SetPrayerPartner)
 			auth.Get("/points/history", cfg.PointsHandler.GetHistory)
+			auth.Get("/users/birthdays", cfg.CentralHandler.GetBirthdays)
 
 			// Services & Attendance
 			auth.Get("/services", cfg.ServiceHandler.List)
 			auth.Get("/services/{id}", cfg.ServiceHandler.GetByID)
-			auth.Post("/services/{id}/checkin", cfg.ServiceHandler.CheckIn)
+			auth.With(writeLimiter.Middleware("checkin")).Post("/services/{id}/checkin", cfg.ServiceHandler.CheckIn)
 
 			// Suggestions (Mi Voz)
 			auth.Get("/suggestions/my", cfg.CentralHandler.ListMySuggestions)
-			auth.Post("/suggestions", cfg.CentralHandler.CreateSuggestion)
+			auth.With(writeLimiter.Middleware("suggestions")).Post("/suggestions", cfg.CentralHandler.CreateSuggestion)
 
 			// Weekly Challenge Completion
 			auth.Post("/challenges/weekly/{id}/complete", cfg.CentralHandler.CompleteWeeklyChallenge)
 
 			// Reflections
-			auth.Post("/reflections", cfg.CentralHandler.CreateReflection)
+			auth.With(writeLimiter.Middleware("reflections")).Post("/reflections", cfg.CentralHandler.CreateReflection)
 
 			// Games
 			auth.Get("/games/{type}/questions", cfg.GameHandler.GetQuestions)
-			auth.Post("/games/{type}/submit", cfg.GameHandler.SubmitGame)
+			auth.With(writeLimiter.Middleware("games")).Post("/games/{type}/submit", cfg.GameHandler.SubmitGame)
 
 			// Pulso Diario
 			auth.Get("/pulse/today", cfg.PulseHandler.GetToday)
-			auth.Post("/pulse/reflection", cfg.PulseHandler.CompleteReflection)
-			auth.Post("/pulse/trivia", cfg.PulseHandler.SubmitTrivia)
-			auth.Post("/pulse/prayer", cfg.PulseHandler.RecordPrayer)
+			auth.With(writeLimiter.Middleware("pulse")).Post("/pulse/reflection", cfg.PulseHandler.CompleteReflection)
+			auth.With(writeLimiter.Middleware("pulse")).Post("/pulse/trivia", cfg.PulseHandler.SubmitTrivia)
+			auth.With(writeLimiter.Middleware("pulse")).Post("/pulse/prayer", cfg.PulseHandler.RecordPrayer)
 
 			// Badges / Logros
 			auth.Get("/badges/my-progress", cfg.BadgeHandler.GetMyProgress)
