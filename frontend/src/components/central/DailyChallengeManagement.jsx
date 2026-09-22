@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Swords, Users, BookOpen, HelpCircle, Timer, CheckCircle2, ToggleLeft, Sparkles, Trophy } from 'lucide-react'
+import { Swords, Users, BookOpen, HelpCircle, Timer, CheckCircle2, ToggleLeft, Sparkles, Trophy, Type, Shuffle } from 'lucide-react'
 import { centralApi } from '../../api'
 import { Card, LevelBadge, Avatar } from '../ui'
-import { VERSO_FLASH, QUE_HARIAS, RETO_60, VERDADERO_FALSO } from '../../data/gameQuestions'
+import { VERSO_FLASH, QUE_HARIAS, RETO_60, VERDADERO_FALSO, AHORCADO_BIBLICO, ORDENA_VERSICULO } from '../../data/gameQuestions'
 
 const BANKS = [
   { id: 'verso_flash', label: 'Verso Flash', icon: BookOpen, data: VERSO_FLASH, color: 'text-blue-400' },
   { id: 'que_harias', label: '¿Qué Harías?', icon: HelpCircle, data: QUE_HARIAS, color: 'text-amber-400' },
   { id: 'reto_60', label: 'Reto 60 seg', icon: Timer, data: RETO_60, color: 'text-orange-400' },
   { id: 'vof', label: 'Verdadero o Falso', icon: CheckCircle2, data: VERDADERO_FALSO, color: 'text-emerald-400' },
+  { id: 'ahorcado', label: 'Ahorcado Bíblico', icon: Type, data: AHORCADO_BIBLICO, color: 'text-purple-400' },
+  { id: 'ordena_verso', label: 'Ordena el Versículo', icon: Shuffle, data: ORDENA_VERSICULO, color: 'text-cyan-400' },
 ]
 
 export default function DailyChallengeManagement() {
@@ -24,7 +26,7 @@ export default function DailyChallengeManagement() {
   }, [])
 
   const selectedBank = BANKS.find(b => b.id === activeBank) || BANKS[0]
-  const totalQuestions = VERSO_FLASH.length + QUE_HARIAS.length + RETO_60.length + VERDADERO_FALSO.length
+  const totalQuestions = VERSO_FLASH.length + QUE_HARIAS.length + RETO_60.length + VERDADERO_FALSO.length + AHORCADO_BIBLICO.length + ORDENA_VERSICULO.length
 
   const topPlayers = [...users]
     .sort((a, b) => (b.total_points || 0) - (a.total_points || 0))
@@ -56,7 +58,7 @@ export default function DailyChallengeManagement() {
         </Card>
         <Card className="p-3.5 text-center">
           <ToggleLeft size={16} className="text-accent-light mx-auto mb-1" />
-          <p className="text-2xl font-black text-text-primary">4</p>
+          <p className="text-2xl font-black text-text-primary">6</p>
           <p className="text-xs text-muted">Juegos activos</p>
         </Card>
         <Card className="p-3.5 text-center">
@@ -101,12 +103,13 @@ export default function DailyChallengeManagement() {
           {selectedBank.data.slice(0, 15).map((q, idx) => (
             <div key={idx} className="p-3 rounded-xl bg-card2 border border-border text-xs space-y-1">
               <p className="font-bold text-text-primary">
-                {q.verse || q.question || q.statement || q.situation}
+                {q.incomplete || q.scenario || q.q || q.word || q.full || q.verse || q.question}
               </p>
-              <div className="flex items-center gap-3 text-[11px] text-muted">
-                {q.reference && <span>Ref: <strong className="text-accent-light">{q.reference}</strong></span>}
-                {q.correctAnswer && <span>R: <strong className="text-emerald-400">{q.correctAnswer}</strong></span>}
-                {q.answer !== undefined && <span>R: <strong className="text-emerald-400">{q.answer ? 'Verdadero' : 'Falso'}</strong></span>}
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                {(q.ref || q.reference) && <span>Ref: <strong className="text-accent-light">{q.ref || q.reference}</strong></span>}
+                {q.cat && <span>Categoría: <strong className="text-purple-400">{q.cat}</strong></span>}
+                {q.hint && <span className="italic">Pista: {q.hint}</span>}
+                {q.ans !== undefined && typeof q.ans === 'boolean' && <span>R: <strong className="text-emerald-400">{q.ans ? 'Verdadero' : 'Falso'}</strong></span>}
                 {q.explanation && <span className="truncate italic">({q.explanation})</span>}
               </div>
             </div>

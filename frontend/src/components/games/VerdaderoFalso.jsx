@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react'
 import { CheckCircle2, XCircle, ChevronRight, BookOpen, Sparkles, Check, X } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { VERDADERO_FALSO } from '../../data/gameQuestions'
+import { VERDADERO_FALSO, getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 const QUESTIONS_COUNT = 5
 
 export default function VerdaderoFalso({ onFinish }) {
   const sessionQuestions = useMemo(() => {
-    return [...VERDADERO_FALSO].sort(() => 0.5 - Math.random()).slice(0, QUESTIONS_COUNT)
+    return getDailyGameQuestions('verdadero_falso', QUESTIONS_COUNT)
   }, [])
 
   const [currentIndex, setCurrentIndex] = useState(0)

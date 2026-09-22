@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { RotateCcw, CheckCircle2, XCircle, ChevronRight, Sparkles, BookOpen } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { ORDENA_VERSICULO } from '../../data/gameQuestions'
+import { ORDENA_VERSICULO, getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 function shuffleArray(arr) {
@@ -15,7 +15,7 @@ function shuffleArray(arr) {
 
 export default function OrdenaVersiculo({ onFinish, onBack }) {
   const sessionVerses = useMemo(() => {
-    return [...ORDENA_VERSICULO].sort(() => 0.5 - Math.random())
+    return getDailyGameQuestions('ordena_verso', 5)
   }, [])
 
   const [currentIndex, setCurrentIndex] = useState(0)

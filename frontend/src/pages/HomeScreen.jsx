@@ -28,18 +28,9 @@ import {
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Card, Btn, Avatar, Modal, MedalBadge, MedalIcon, LevelBadge } from '../components/ui'
+import { VERSO_FLASH } from '../data/gameQuestions'
 
-const DAILY_VERSES = [
-  { verse: "Digo: ¿Qué es el hombre, para que tengas de él memoria, Y el hijo del hombre, para que lo visites?", reference: "Salmos 8:4" },
-  { verse: "Todo lo puedo en Cristo que me fortalece.", reference: "Filipenses 4:13" },
-  { verse: "Jehová es mi pastor; nada me faltará.", reference: "Salmos 23:1" },
-  { verse: "Porque yo sé los pensamientos que tengo acerca de vosotros, pensamientos de paz y no de mal.", reference: "Jeremías 29:11" },
-  { verse: "Y sabemos que a los que aman a Dios, todas las cosas les ayudan a bien.", reference: "Romanos 8:28" },
-  { verse: "Fíate de Jehová de todo tu corazón, y no te apoyes en tu propia prudencia.", reference: "Proverbios 3:5" },
-  { verse: "Pero los que esperan a Jehová tendrán nuevas fuerzas; levantarán alas como las águilas.", reference: "Isaías 40:31" },
-  { verse: "Mira que te mando que te esfuerces y seas valiente; no temas ni desmayes.", reference: "Josué 1:9" },
-  { verse: "El Señor es mi luz y mi salvación; ¿de quién temeré?", reference: "Salmos 27:1" },
-]
+const DAILY_VERSES = VERSO_FLASH.map(v => ({ verse: v.full, reference: v.ref }))
 
 export default function HomeScreen() {
   const { currentUser, totalPoints, level, isTeam, refreshProfile } = useAuth()

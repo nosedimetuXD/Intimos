@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react'
 import { HelpCircle, CheckCircle2, AlertCircle, ChevronRight, BookOpen, Sparkles } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { QUE_HARIAS } from '../../data/gameQuestions'
+import { QUE_HARIAS, getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 const SCENARIOS_COUNT = 4
 
 export default function QueHarias({ onFinish }) {
   const sessionScenarios = useMemo(() => {
-    return [...QUE_HARIAS].sort(() => 0.5 - Math.random()).slice(0, SCENARIOS_COUNT)
+    return getDailyGameQuestions('que_harias', SCENARIOS_COUNT)
   }, [])
 
   const [currentIndex, setCurrentIndex] = useState(0)

@@ -7,24 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { Card, Btn } from '../components/ui'
 import confetti from 'canvas-confetti'
 import { pulseApi } from '../api'
-
-const TRIVIA_POOL = [
-  { q: '¿Quién fue tragado por un gran pez?', opts: ['Elías', 'Jonás', 'Moisés', 'Daniel'], ans: 1 },
-  { q: '¿Cuántos discípulos tuvo Jesús?', opts: ['7', '10', '12', '15'], ans: 2 },
-  { q: '¿En qué río bautizó Juan el Bautista?', opts: ['Nilo', 'Éufrates', 'Jordán', 'Tigris'], ans: 2 },
-  { q: '¿Cuál es el libro más corto de la Biblia?', opts: ['Rut', 'Abdías', 'Filemón', '3 Juan'], ans: 3 },
-  { q: '¿Dónde nació Jesús?', opts: ['Nazaret', 'Belén', 'Jerusalén', 'Jericó'], ans: 1 },
-  { q: '¿Cuántos días estuvo Jesús en el desierto?', opts: ['20', '30', '40', '50'], ans: 2 },
-  { q: '¿Quién construyó el arca?', opts: ['Abraham', 'Moisés', 'Noé', 'Salomón'], ans: 2 },
-  { q: '¿Cuántos libros tiene la Biblia?', opts: ['60', '66', '72', '78'], ans: 1 },
-  { q: '¿Cuál fue la primera milagrosa señal de Jesús?', opts: ['Resucitar a Lázaro', 'Caminar sobre el agua', 'Convertir agua en vino', 'Multiplicar panes'], ans: 2 },
-  { q: '¿Qué rey pidió sabiduría a Dios?', opts: ['David', 'Saúl', 'Salomón', 'Ezequías'], ans: 2 },
-  { q: '¿Cómo se llama el jardín donde fue arrestado Jesús?', opts: ['Edén', 'Getsemaní', 'Siloé', 'Betania'], ans: 1 },
-  { q: '¿Quién traicionó a Jesús?', opts: ['Pedro', 'Tomás', 'Juan', 'Judas Iscariote'], ans: 3 },
-  { q: '¿Con qué derrota David a Goliat?', opts: ['Una espada', 'Una honda y una piedra', 'Un arco', 'Sus manos'], ans: 1 },
-  { q: '¿Quién escribió el libro de Apocalipsis?', opts: ['Pablo', 'Pedro', 'Juan', 'Lucas'], ans: 2 },
-  { q: '¿De qué tribu era el rey David?', opts: ['Leví', 'Benjamín', 'Judá', 'Efraín'], ans: 2 }
-]
+import { RETO_60 } from '../data/gameQuestions'
 
 const GRADIENTS = [
   'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)', // Dom
@@ -40,9 +23,37 @@ function getTodayKey() {
   return new Date().toISOString().split('T')[0]
 }
 
-function getTodayTrivia() {
-  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
-  return TRIVIA_POOL[dayOfYear % TRIVIA_POOL.length]
+function getTodayTrivia(userId = '') {
+  const todayStr = getTodayKey()
+  const cacheKey = `intimos_pulso_trivia_${todayStr}_${userId}`
+  const historyKey = `intimos_pulso_trivia_history_${userId}`
+
+  try {
+    const cached = localStorage.getItem(cacheKey)
+    if (cached) return JSON.parse(cached)
+  } catch (e) {}
+
+  let seen = []
+  try {
+    const raw = localStorage.getItem(historyKey)
+    if (raw) seen = JSON.parse(raw)
+  } catch (e) {}
+
+  let available = RETO_60.filter(item => !seen.includes(item.q))
+  if (available.length === 0) {
+    seen = []
+    available = [...RETO_60]
+  }
+
+  const item = available[Math.floor(Math.random() * available.length)] || available[0]
+
+  try {
+    seen.push(item.q)
+    localStorage.setItem(historyKey, JSON.stringify(seen.slice(-60)))
+    localStorage.setItem(cacheKey, JSON.stringify(item))
+  } catch (e) {}
+
+  return item
 }
 
 export default function PulsoDiario() {
@@ -65,7 +76,7 @@ export default function PulsoDiario() {
   const [reflectionDone, setReflectionDone] = useState(pulse.reflection || false)
   const [streak, setStreak] = useState(1)
 
-  const trivia = getTodayTrivia()
+  const trivia = React.useMemo(() => getTodayTrivia(currentUser?.id), [currentUser?.id, today])
   const dayIdx = new Date().getDay()
   const bg = GRADIENTS[dayIdx]
 

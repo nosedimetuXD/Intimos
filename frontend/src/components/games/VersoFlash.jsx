@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { BookOpen, CheckCircle2, XCircle, ChevronRight, Eye, Sparkles, Clock } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { VERSO_FLASH } from '../../data/gameQuestions'
+import { VERSO_FLASH, getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 const ROUNDS_COUNT = 5
 
 export default function VersoFlash({ onFinish }) {
   const sessionVerses = useMemo(() => {
-    return [...VERSO_FLASH].sort(() => 0.5 - Math.random()).slice(0, ROUNDS_COUNT)
+    return getDailyGameQuestions('verso_flash', ROUNDS_COUNT)
   }, [])
 
   const [currentIndex, setCurrentIndex] = useState(0)

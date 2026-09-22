@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { Heart, HelpCircle, CheckCircle2, XCircle, ChevronRight, Trophy, Sparkles } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { AHORCADO_BIBLICO } from '../../data/gameQuestions'
+import { AHORCADO_BIBLICO, getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 const ALPHABET = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('')
@@ -9,10 +9,9 @@ const MAX_WRONG = 6
 const WORDS_PER_SESSION = 5
 
 export default function AhorcadoBiblico({ onFinish, onBack }) {
-  // Select 5 random words from pool
+  // Select 5 rotated daily words
   const sessionWords = useMemo(() => {
-    const shuffled = [...AHORCADO_BIBLICO].sort(() => 0.5 - Math.random())
-    return shuffled.slice(0, WORDS_PER_SESSION)
+    return getDailyGameQuestions('ahorcado', WORDS_PER_SESSION)
   }, [])
 
   const [currentIndex, setCurrentIndex] = useState(0)

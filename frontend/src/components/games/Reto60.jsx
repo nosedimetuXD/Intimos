@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { Timer, Zap, Flame, CheckCircle2, XCircle, Sparkles } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { RETO_60 } from '../../data/gameQuestions'
+import { RETO_60, getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 export default function Reto60({ onFinish }) {
-  // Shuffle questions
+  // Rotated daily questions
   const questions = useMemo(() => {
-    return [...RETO_60].sort(() => 0.5 - Math.random())
+    return getDailyGameQuestions('reto_60', 30)
   }, [])
 
   const [timeLeft, setTimeLeft] = useState(60)
