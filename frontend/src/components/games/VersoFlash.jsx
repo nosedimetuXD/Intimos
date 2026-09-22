@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react'
-import { BookOpen, CheckCircle2, XCircle, ChevronRight, Eye, Sparkles, Clock } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { BookOpen, CheckCircle2, XCircle, ChevronRight } from 'lucide-react'
 import { Card, Btn } from '../ui'
-import { VERSO_FLASH, getDailyGameQuestions } from '../../data/gameQuestions'
+import { getDailyGameQuestions } from '../../data/gameQuestions'
 import confetti from 'canvas-confetti'
 
 const ROUNDS_COUNT = 5
@@ -12,35 +12,11 @@ export default function VersoFlash({ onFinish }) {
   }, [])
 
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [phase, setPhase] = useState('memorize') // 'memorize' | 'question' | 'feedback'
-  const [countdown, setCountdown] = useState(10)
+  const [phase, setPhase] = useState('question') // 'question' | 'feedback'
   const [selectedOpt, setSelectedOpt] = useState(null)
   const [score, setScore] = useState(0)
 
   const currentItem = sessionVerses[currentIndex]
-
-  // Countdown in memorize phase
-  useEffect(() => {
-    if (phase !== 'memorize') return
-
-    setCountdown(10)
-    const interval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          setPhase('question')
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [phase, currentIndex])
-
-  const handleSkipTimer = () => {
-    setPhase('question')
-  }
 
   const handleSelectOption = (idx) => {
     if (phase !== 'question') return
@@ -58,7 +34,7 @@ export default function VersoFlash({ onFinish }) {
     if (currentIndex + 1 < sessionVerses.length) {
       setCurrentIndex(prev => prev + 1)
       setSelectedOpt(null)
-      setPhase('memorize')
+      setPhase('question')
     } else {
       const isLastCorrect = selectedOpt === currentItem.ans
       const finalScore = score + (isLastCorrect ? 0 : 0) // already added in handleSelectOption
@@ -81,34 +57,6 @@ export default function VersoFlash({ onFinish }) {
           {currentItem.ref}
         </span>
       </div>
-
-      {/* Phase 1: Memorization */}
-      {phase === 'memorize' && (
-        <Card className="p-6 space-y-4 text-center border-accent/40 shadow-lg animate-fade-in">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-amber-400 font-bold">
-            <Clock size={15} />
-            <span>Memoriza el versículo ({countdown}s)</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-card2/80 border border-border">
-            <p className="text-base font-bold text-text-primary leading-relaxed">
-              "{currentItem.full}"
-            </p>
-            <p className="text-xs text-accent-light font-bold mt-2">
-              — {currentItem.ref}
-            </p>
-          </div>
-
-          <p className="text-xs text-muted leading-snug">
-            {currentItem.context}
-          </p>
-
-          <Btn fullWidth onClick={handleSkipTimer} size="md">
-            <span>¡Ya me lo sé! Continuar</span>
-            <ChevronRight size={16} />
-          </Btn>
-        </Card>
-      )}
 
       {/* Phase 2: Complete the Verse */}
       {phase === 'question' && (

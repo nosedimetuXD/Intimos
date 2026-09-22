@@ -35,9 +35,9 @@ const GAME_METADATA = {
     iconColor: 'text-blue-400',
     maxPoints: 100,
     rules: [
-      'Memoriza el versículo durante 10 segundos.',
+      'Lee atentamente el versículo bíblico incompleto.',
       'Elige la opción correcta para completar los espacios en blanco.',
-      'Aprende el contexto histórico de cada pasaje.'
+      'Aprende el contexto histórico y la referencia de cada pasaje.'
     ]
   },
   que_harias: {
